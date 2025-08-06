@@ -193,15 +193,18 @@ const Grid: React.FC<GridProps> = ({
 
   // Update grid with current path
   useEffect(() => {
-    const newGrid = grid.map((row) =>
-      row.map((cell) => ({
-        ...cell,
-        isPath: currentPath.some(
-          (pos) => pos.x === cell.position.x && pos.y === cell.position.y,
-        ),
-      })),
-    );
-    setGrid(newGrid);
+    // Only update if grid is not empty (avoids overriding initialization)
+    if (grid.length > 0) {
+      const newGrid = grid.map((row) =>
+        row.map((cell) => ({
+          ...cell,
+          isPath: currentPath.some(
+            (pos) => pos.x === cell.position.x && pos.y === cell.position.y,
+          ),
+        })),
+      );
+      setGrid(newGrid);
+    }
   }, [currentPath]); // Don't include grid in deps to avoid infinite loop
 
   return (
