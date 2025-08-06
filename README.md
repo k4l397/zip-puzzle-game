@@ -3,6 +3,7 @@
 A modern, web-based puzzle game inspired by LinkedIn's Zip puzzle. Connect numbered dots in sequence by drawing a continuous path that fills the entire grid.
 
 **🔗 GitHub Repository**: [https://github.com/k4l397/zip-puzzle-game](https://github.com/k4l397/zip-puzzle-game)
+**🎮 Play Online**: [https://k4l397.github.io/zip-puzzle-game/](https://k4l397.github.io/zip-puzzle-game/)
 
 ![Game Screenshot](https://via.placeholder.com/600x400/22c55e/ffffff?text=Zip+Puzzle+Game)
 
@@ -197,10 +198,10 @@ npm run preview
 
 The built application is static and can be deployed to:
 
-- **Vercel**: `vercel --prod`
-- **Netlify**: Drag & drop `dist/` folder
-- **GitHub Pages**: Deploy `dist/` to `gh-pages` branch
-- **Any Static Host**: Upload contents of `dist/` folder
+• **GitHub Pages**: Automatic deployment via GitHub Actions (already configured)
+• **Vercel**: `vercel --prod`
+• **Netlify**: Drag & drop `dist/` folder
+• **Any Static Host**: Upload contents of `dist/` folder
 
 ### Performance Optimizations
 
@@ -313,3 +314,9 @@ MIT License - see [LICENSE](LICENSE) file for details.
 **🎉 All PRD requirements successfully implemented!**
 
 Built with ❤️ using modern web technologies.
+
+## 🌐 Live Demo
+
+**Play the game now**: [https://k4l397.github.io/zip-puzzle-game/](https://k4l397.github.io/zip-puzzle-game/)
+
+The game is automatically deployed to GitHub Pages via GitHub Actions whenever changes are pushed to the main branch.
