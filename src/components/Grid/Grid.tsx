@@ -1,7 +1,7 @@
 import React, { useState, useCallback, useEffect } from "react";
 import Cell from "../Cell/Cell";
 import Dot from "../Dot/Dot";
-import PathSVG from "../Path/PathSVG";
+import SimplePath from "../Path/SimplePath";
 import "./Grid.css";
 
 export interface Position {
@@ -295,7 +295,7 @@ const Grid: React.FC<GridProps> = ({
             </div>
           )),
         )}
-        <PathSVG path={currentPath} gridSize={size} />
+        <SimplePath path={currentPath} gridSize={size} />
       </div>
     </div>
   );

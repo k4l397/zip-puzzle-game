@@ -14,22 +14,25 @@ interface PathSVGProps {
 const PathSVG: React.FC<PathSVGProps> = ({ path, gridSize }) => {
   if (path.length < 1) return null;
 
-  // SVG viewBox should match the grid dimensions
-  // Each cell takes up equal space in the SVG coordinate system
-  const viewBoxSize = gridSize * 100; // Give each cell 100 units in SVG space
-  const cellSize = 100; // SVG units per cell
+  // SVG coordinate system: each cell + gap = one unit in our coordinate system
+  // For a 4x4 grid, we have 4 cells with gaps, so viewBox should be 4x4
+  const cellGap = 2; // Match CSS gap
+  const cellSize =
+    gridSize === 3 ? 70 : gridSize === 4 ? 60 : gridSize === 5 ? 50 : 45;
+  const totalSize = gridSize * cellSize + (gridSize - 1) * cellGap;
+  const viewBoxSize = totalSize;
 
   const generateSVGPath = (): string => {
     if (path.length < 2) return "";
 
     let pathData = "";
-    const startX = path[0].x * cellSize + cellSize / 2;
-    const startY = path[0].y * cellSize + cellSize / 2;
+    const startX = path[0].x * (cellSize + cellGap) + cellSize / 2;
+    const startY = path[0].y * (cellSize + cellGap) + cellSize / 2;
     pathData += `M ${startX} ${startY}`;
 
     for (let i = 1; i < path.length; i++) {
-      const x = path[i].x * cellSize + cellSize / 2;
-      const y = path[i].y * cellSize + cellSize / 2;
+      const x = path[i].x * (cellSize + cellGap) + cellSize / 2;
+      const y = path[i].y * (cellSize + cellGap) + cellSize / 2;
       pathData += ` L ${x} ${y}`;
     }
 
@@ -39,8 +42,8 @@ const PathSVG: React.FC<PathSVGProps> = ({ path, gridSize }) => {
   const renderStartCap = () => {
     if (path.length === 0) return null;
 
-    const x = path[0].x * cellSize + cellSize / 2;
-    const y = path[0].y * cellSize + cellSize / 2;
+    const x = path[0].x * (cellSize + cellGap) + cellSize / 2;
+    const y = path[0].y * (cellSize + cellGap) + cellSize / 2;
 
     return (
       <circle
@@ -56,11 +59,11 @@ const PathSVG: React.FC<PathSVGProps> = ({ path, gridSize }) => {
   };
 
   const renderEndCap = () => {
-    if (path.length < 2) return null;
+    if (path.length < 1) return null;
 
     const lastPos = path[path.length - 1];
-    const x = lastPos.x * cellSize + cellSize / 2;
-    const y = lastPos.y * cellSize + cellSize / 2;
+    const x = lastPos.x * (cellSize + cellGap) + cellSize / 2;
+    const y = lastPos.y * (cellSize + cellGap) + cellSize / 2;
 
     return (
       <circle
@@ -88,10 +91,10 @@ const PathSVG: React.FC<PathSVGProps> = ({ path, gridSize }) => {
       viewBox={`0 0 ${viewBoxSize} ${viewBoxSize}`}
       style={{
         position: "absolute",
-        top: 0,
-        left: 0,
-        width: "100%",
-        height: "100%",
+        top: 20,
+        left: 20,
+        width: "calc(100% - 40px)",
+        height: "calc(100% - 40px)",
         pointerEvents: "none",
         zIndex: 5,
       }}

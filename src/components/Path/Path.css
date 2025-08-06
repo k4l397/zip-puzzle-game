@@ -138,6 +138,43 @@
     filter: drop-shadow(0 2px 8px rgba(237, 137, 54, 0.4));
 }
 
+/* Simple Path Styling */
+.simple-path-container {
+    pointer-events: none;
+}
+
+.simple-path-segment {
+    background: linear-gradient(135deg, #e53e3e, #c53030);
+    border-radius: 6px;
+    box-shadow: 0 2px 8px rgba(229, 62, 62, 0.3);
+}
+
+.simple-path-horizontal {
+    border-radius: 6px;
+}
+
+.simple-path-vertical {
+    border-radius: 6px;
+}
+
+.simple-path-cap {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    border: 2px solid rgba(255, 255, 255, 0.9);
+}
+
+.simple-path-start {
+    background: linear-gradient(135deg, #48bb78, #38a169);
+    box-shadow: 0 2px 8px rgba(72, 187, 120, 0.4);
+}
+
+.simple-path-end {
+    background: linear-gradient(135deg, #ed8936, #dd6b20);
+    box-shadow: 0 2px 8px rgba(237, 137, 54, 0.4);
+    animation: endCapPulse 2s ease-in-out infinite;
+}
+
 /* Reduced motion support */
 @media (prefers-reduced-motion: reduce) {
     .path-segment {
