@@ -63,9 +63,9 @@ test.describe("Zip Puzzle Game - Basic Functionality", () => {
     const dot1 = page.locator('.dot[data-number="1"]');
     await dot1.click();
 
-    // Check that a path cell is created
-    const pathCells = page.locator(".cell--path");
-    await expect(pathCells).toHaveCount(1);
+    // Check that a start cap is created (single position shows start cap)
+    const startCap = page.locator(".path-start-cap");
+    await expect(startCap).toHaveCount(1);
 
     // Check that dot 1 becomes connected
     await expect(
@@ -78,9 +78,9 @@ test.describe("Zip Puzzle Game - Basic Functionality", () => {
     const dot2 = page.locator('.dot[data-number="2"]');
     await dot2.click();
 
-    // Should have no path cells
-    const pathCells = page.locator(".cell--path");
-    await expect(pathCells).toHaveCount(0);
+    // Should have no path segments or caps
+    const startCaps = page.locator(".path-start-cap");
+    await expect(startCaps).toHaveCount(0);
   });
 
   test("should highlight next expected dot", async ({ page }) => {
@@ -98,14 +98,14 @@ test.describe("Zip Puzzle Game - Basic Functionality", () => {
     await page.locator('.dot[data-number="1"]').click();
 
     // Verify path exists
-    await expect(page.locator(".cell--path")).toHaveCount(1);
+    await expect(page.locator(".path-start-cap")).toHaveCount(1);
 
     // Click New Puzzle
     await page.locator(".new-game-button").click();
     await page.waitForTimeout(500);
 
     // Path should be cleared
-    await expect(page.locator(".cell--path")).toHaveCount(0);
+    await expect(page.locator(".path-start-cap")).toHaveCount(0);
 
     // Timer should reset to 0.00s
     await expect(page.locator(".timer-display")).toContainText("0.00s");
@@ -128,8 +128,8 @@ test.describe("Zip Puzzle Game - Basic Functionality", () => {
     );
     await diagonalCell.click();
 
-    // Should still only have 1 path cell (the starting position)
-    await expect(page.locator(".cell--path")).toHaveCount(1);
+    // Should still only have 1 start cap (the starting position)
+    await expect(page.locator(".path-start-cap")).toHaveCount(1);
   });
 
   test("should maintain grid state after size changes", async ({ page }) => {
@@ -155,9 +155,9 @@ test.describe("Zip Puzzle Game - Basic Functionality", () => {
     // Start from dot 1
     await page.locator('.dot[data-number="1"]').click();
 
-    // Check that the cell with dot 1 has proper classes
-    const startCell = page.locator(".cell--path").first();
-    await expect(startCell).toBeVisible();
+    // Check that the start cap is visible
+    const startCap = page.locator(".path-start-cap");
+    await expect(startCap.first()).toBeVisible();
 
     // Check that dots have proper visual states
     await expect(
@@ -175,8 +175,8 @@ test.describe("Zip Puzzle Game - Basic Functionality", () => {
       await dot1.click({ delay: 50 });
     }
 
-    // Should still have only 1 path cell
-    await expect(page.locator(".cell--path")).toHaveCount(1);
+    // Should still have only 1 start cap
+    await expect(page.locator(".path-start-cap")).toHaveCount(1);
 
     // Game should still be functional
     await expect(

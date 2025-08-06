@@ -1,6 +1,7 @@
 import React, { useState, useCallback, useEffect } from "react";
 import Cell from "../Cell/Cell";
 import Dot from "../Dot/Dot";
+import Path from "../Path/Path";
 import "./Grid.css";
 
 export interface Position {
@@ -10,8 +11,6 @@ export interface Position {
 
 export interface GridCell {
   position: Position;
-  hasPipe: boolean;
-  isPath: boolean;
   dot?: number; // Dot number if this cell contains a dot
 }
 
@@ -42,8 +41,6 @@ const Grid: React.FC<GridProps> = ({
           .fill(null)
           .map((_, x) => ({
             position: { x, y },
-            hasPipe: false,
-            isPath: false,
           })),
       );
 
@@ -202,21 +199,14 @@ const Grid: React.FC<GridProps> = ({
     }
   }, [currentPath, grid, size, onGameComplete]);
 
-  // Update grid with current path
-  useEffect(() => {
-    // Only update if grid is not empty (avoids overriding initialization)
-    if (grid.length > 0) {
-      const newGrid = grid.map((row) =>
-        row.map((cell) => ({
-          ...cell,
-          isPath: currentPath.some(
-            (pos) => pos.x === cell.position.x && pos.y === cell.position.y,
-          ),
-        })),
-      );
-      setGrid(newGrid);
-    }
-  }, [currentPath]); // Don't include grid in deps to avoid infinite loop
+  // Calculate cell size for path rendering
+  const getCellSize = () => {
+    if (size === 3) return 70;
+    if (size === 4) return 60;
+    if (size === 5) return 50;
+    if (size === 6) return 45;
+    return 60;
+  };
 
   return (
     <div className="grid-container">
@@ -260,21 +250,7 @@ const Grid: React.FC<GridProps> = ({
               data-x={x}
               data-y={y}
             >
-              <Cell
-                position={cell.position}
-                hasPipe={cell.hasPipe}
-                isPath={cell.isPath}
-                isStart={
-                  currentPath.length > 0 &&
-                  currentPath[0].x === cell.position.x &&
-                  currentPath[0].y === cell.position.y
-                }
-                isEnd={
-                  currentPath.length > 0 &&
-                  currentPath[currentPath.length - 1].x === cell.position.x &&
-                  currentPath[currentPath.length - 1].y === cell.position.y
-                }
-              />
+              <Cell position={cell.position} hasDot={!!cell.dot} />
               {cell.dot && (
                 <Dot
                   number={cell.dot}
@@ -328,6 +304,7 @@ const Grid: React.FC<GridProps> = ({
             </div>
           )),
         )}
+        <Path path={currentPath} gridSize={size} cellSize={getCellSize()} />
       </div>
     </div>
   );
