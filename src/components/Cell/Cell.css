@@ -32,25 +32,13 @@
     border-color: #a0aec0;
 }
 
-.cell-path-indicator {
-    width: 24px;
-    height: 24px;
-    background: rgba(255, 255, 255, 0.95);
-    border-radius: 50%;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-    animation: pathPulse 1.5s ease-in-out infinite;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: 600;
-    font-size: 0.7rem;
-    color: #2d3748;
-}
-
-.path-number {
-    line-height: 1;
-    font-family:
-        -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+.cell-pipe {
+    width: 80%;
+    height: 80%;
+    background: rgba(255, 255, 255, 0.9);
+    border-radius: 4px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    border: 2px solid rgba(255, 255, 255, 1);
 }
 
 .cell--start {
@@ -75,16 +63,16 @@
     box-shadow: 0 6px 20px rgba(237, 137, 54, 0.5);
 }
 
-.cell--start .cell-path-indicator {
-    background: rgba(255, 255, 255, 1);
-    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.3);
-    animation: none;
+.cell--start .cell-pipe {
+    background: rgba(72, 187, 120, 0.9);
+    border-color: #38a169;
+    box-shadow: 0 2px 8px rgba(72, 187, 120, 0.3);
 }
 
-.cell--end .cell-path-indicator {
-    background: rgba(255, 255, 255, 1);
-    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.3);
-    animation: none;
+.cell--end .cell-pipe {
+    background: rgba(237, 137, 54, 0.9);
+    border-color: #dd6b20;
+    box-shadow: 0 2px 8px rgba(237, 137, 54, 0.3);
 }
 
 @keyframes pathPulse {
@@ -94,7 +82,7 @@
         opacity: 0.9;
     }
     50% {
-        transform: scale(1.1);
+        transform: scale(1.05);
         opacity: 1;
     }
 }

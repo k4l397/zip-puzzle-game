@@ -181,11 +181,22 @@ const Grid: React.FC<GridProps> = ({
         }
       }
 
-      // Check if all dots are visited and grid is fully covered
+      // Check if all dots are visited, grid is fully covered, AND ends on final dot
       const allDotsVisited = currentDotIndex === dots.length;
       const gridFullyCovered = currentPath.length === size * size;
 
-      if (isValidPath && allDotsVisited && gridFullyCovered) {
+      // Check if the last position in the path is the highest numbered dot
+      const lastPosition = currentPath[currentPath.length - 1];
+      const lastDot = lastPosition
+        ? dots.find(
+            (dot) =>
+              dot.position.x === lastPosition.x &&
+              dot.position.y === lastPosition.y,
+          )
+        : null;
+      const endsOnFinalDot = lastDot?.number === dots.length;
+
+      if (isValidPath && allDotsVisited && gridFullyCovered && endsOnFinalDot) {
         onGameComplete();
       }
     }
@@ -263,10 +274,6 @@ const Grid: React.FC<GridProps> = ({
                   currentPath[currentPath.length - 1].x === cell.position.x &&
                   currentPath[currentPath.length - 1].y === cell.position.y
                 }
-                pathIndex={currentPath.findIndex(
-                  (pos) =>
-                    pos.x === cell.position.x && pos.y === cell.position.y,
-                )}
               />
               {cell.dot && (
                 <Dot

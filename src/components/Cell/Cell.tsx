@@ -12,7 +12,6 @@ interface CellProps {
   isPath: boolean;
   isStart?: boolean;
   isEnd?: boolean;
-  pathIndex?: number;
 }
 
 const Cell: React.FC<CellProps> = ({
@@ -21,7 +20,6 @@ const Cell: React.FC<CellProps> = ({
   isPath,
   isStart = false,
   isEnd = false,
-  pathIndex,
 }) => {
   const cellClass = [
     "cell",
@@ -35,13 +33,7 @@ const Cell: React.FC<CellProps> = ({
 
   return (
     <div className={cellClass} data-x={position.x} data-y={position.y}>
-      {isPath && (
-        <div className="cell-path-indicator">
-          {pathIndex !== undefined && pathIndex < 10 && (
-            <span className="path-number">{pathIndex + 1}</span>
-          )}
-        </div>
-      )}
+      {isPath && <div className="cell-pipe" />}
     </div>
   );
 };
