@@ -15,7 +15,6 @@
     "test:report": "playwright show-report"
   },
   "dependencies": {
-    "puppeteer": "^24.16.0",
     "react": "^19.1.0",
     "react-dom": "^19.1.0"
   },

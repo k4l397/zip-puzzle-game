@@ -48,8 +48,8 @@ const Grid: React.FC<GridProps> = ({
       const gridY = canvasY - CANVAS_CONFIG.padding;
 
       // Convert to grid coordinates
-      const cellX = Math.round(gridX / GAME_CONFIG.cellSize);
-      const cellY = Math.round(gridY / GAME_CONFIG.cellSize);
+      const cellX = Math.floor(gridX / GAME_CONFIG.cellSize);
+      const cellY = Math.floor(gridY / GAME_CONFIG.cellSize);
 
       // Check bounds
       if (
@@ -68,8 +68,14 @@ const Grid: React.FC<GridProps> = ({
 
   const getCanvasPosition = useCallback((gridPos: Position): Position => {
     return {
-      x: gridPos.x * GAME_CONFIG.cellSize + CANVAS_CONFIG.padding,
-      y: gridPos.y * GAME_CONFIG.cellSize + CANVAS_CONFIG.padding,
+      x:
+        gridPos.x * GAME_CONFIG.cellSize +
+        CANVAS_CONFIG.padding +
+        GAME_CONFIG.cellSize / 2,
+      y:
+        gridPos.y * GAME_CONFIG.cellSize +
+        CANVAS_CONFIG.padding +
+        GAME_CONFIG.cellSize / 2,
     };
   }, []);
 
@@ -114,23 +120,35 @@ const Grid: React.FC<GridProps> = ({
 
   const drawPath = useCallback(
     (ctx: CanvasRenderingContext2D, path: Position[]) => {
-      if (path.length < 2) return;
+      if (path.length < 1) return;
 
       ctx.strokeStyle = GAME_CONFIG.colors.pipe;
       ctx.lineWidth = GAME_CONFIG.pipeWidth;
       ctx.lineCap = 'round';
       ctx.lineJoin = 'round';
 
-      ctx.beginPath();
-      const startPos = getCanvasPosition(path[0]);
-      ctx.moveTo(startPos.x, startPos.y);
+      // Draw path segments
+      if (path.length > 1) {
+        ctx.beginPath();
+        const startPos = getCanvasPosition(path[0]);
+        ctx.moveTo(startPos.x, startPos.y);
 
-      for (let i = 1; i < path.length; i++) {
-        const pos = getCanvasPosition(path[i]);
-        ctx.lineTo(pos.x, pos.y);
+        for (let i = 1; i < path.length; i++) {
+          const pos = getCanvasPosition(path[i]);
+          ctx.lineTo(pos.x, pos.y);
+        }
+
+        ctx.stroke();
       }
 
-      ctx.stroke();
+      // Draw filled circles at each path position for better visibility
+      ctx.fillStyle = GAME_CONFIG.colors.pipe;
+      for (const position of path) {
+        const pos = getCanvasPosition(position);
+        ctx.beginPath();
+        ctx.arc(pos.x, pos.y, GAME_CONFIG.pipeWidth / 3, 0, 2 * Math.PI);
+        ctx.fill();
+      }
     },
     [getCanvasPosition]
   );
@@ -140,20 +158,33 @@ const Grid: React.FC<GridProps> = ({
       puzzle.dots.forEach(dot => {
         const pos = getCanvasPosition(dot.position);
 
-        // Draw dot circle
+        // Draw dot circle with shadow for better visibility
         ctx.fillStyle = GAME_CONFIG.colors.dot;
+        ctx.shadowColor = 'rgba(0, 0, 0, 0.2)';
+        ctx.shadowBlur = 4;
+        ctx.shadowOffsetX = 1;
+        ctx.shadowOffsetY = 1;
+
         ctx.beginPath();
         ctx.arc(pos.x, pos.y, GAME_CONFIG.dotRadius, 0, 2 * Math.PI);
         ctx.fill();
 
+        // Reset shadow
+        ctx.shadowColor = 'transparent';
+        ctx.shadowBlur = 0;
+        ctx.shadowOffsetX = 0;
+        ctx.shadowOffsetY = 0;
+
         // Draw dot border
         ctx.strokeStyle = 'white';
         ctx.lineWidth = CANVAS_CONFIG.dotBorderWidth;
+        ctx.beginPath();
+        ctx.arc(pos.x, pos.y, GAME_CONFIG.dotRadius, 0, 2 * Math.PI);
         ctx.stroke();
 
         // Draw dot number
         ctx.fillStyle = GAME_CONFIG.colors.dotText;
-        ctx.font = 'bold 14px -apple-system, BlinkMacSystemFont, sans-serif';
+        ctx.font = 'bold 16px -apple-system, BlinkMacSystemFont, sans-serif';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         ctx.fillText(dot.number.toString(), pos.x, pos.y);
@@ -211,7 +242,7 @@ const Grid: React.FC<GridProps> = ({
       if (position.x === lastPosition.x && position.y === lastPosition.y)
         return;
 
-      // Check if it's a valid move
+      // Check if it's a valid move (adjacent cells only)
       if (!isValidMove(lastPosition, position)) return;
 
       // Check if we're going backwards (allow undo)

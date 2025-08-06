@@ -1,73 +1,63 @@
 import { test, expect } from '@playwright/test';
 
 test.describe('Console Error Detection', () => {
-  test('should load without console errors', async ({ page }) => {
-    // Collect all console errors
-    const consoleErrors: string[] = [];
-    const pageErrors: string[] = [];
+  let consoleErrors: string[] = [];
+  let pageErrors: string[] = [];
+
+  test.beforeEach(async ({ page }) => {
+    // Reset error arrays
+    consoleErrors = [];
+    pageErrors = [];
 
     // Listen for console errors
-    page.on('console', (msg) => {
+    page.on('console', msg => {
       if (msg.type() === 'error') {
-        consoleErrors.push(msg.text());
+        const text = msg.text();
+        if (
+          !text.includes('favicon') &&
+          !text.includes('404') &&
+          !text.toLowerCase().includes('warning')
+        ) {
+          consoleErrors.push(text);
+        }
       }
     });
 
     // Listen for page errors (JavaScript errors)
-    page.on('pageerror', (error) => {
-      pageErrors.push(error.message);
+    page.on('pageerror', error => {
+      const message = error.message;
+      if (
+        !message.includes('favicon') &&
+        !message.includes('404') &&
+        !message.toLowerCase().includes('warning')
+      ) {
+        pageErrors.push(message);
+      }
     });
 
-    // Navigate to the app
-    await page.goto('http://localhost:5173');
+    await page.goto('/');
+  });
 
+  test('should load app without console errors', async ({ page }) => {
     // Wait for the app to load
     await page.waitForSelector('.game-container', { timeout: 10000 });
 
     // Wait a bit more to catch any async errors
     await page.waitForTimeout(2000);
 
-    // Filter out non-critical errors
-    const criticalConsoleErrors = consoleErrors.filter(error =>
-      !error.includes('favicon') &&
-      !error.includes('404') &&
-      !error.toLowerCase().includes('warning')
-    );
-
-    const criticalPageErrors = pageErrors.filter(error =>
-      !error.includes('favicon') &&
-      !error.includes('404') &&
-      !error.toLowerCase().includes('warning')
-    );
-
-    // Log any errors for debugging
-    if (criticalConsoleErrors.length > 0) {
-      console.log('Console Errors:', criticalConsoleErrors);
-    }
-    if (criticalPageErrors.length > 0) {
-      console.log('Page Errors:', criticalPageErrors);
-    }
-
     // Assert no critical errors
-    expect(criticalConsoleErrors).toHaveLength(0);
-    expect(criticalPageErrors).toHaveLength(0);
+    if (consoleErrors.length > 0) {
+      console.log('Console Errors:', consoleErrors);
+    }
+    if (pageErrors.length > 0) {
+      console.log('Page Errors:', pageErrors);
+    }
+
+    expect(consoleErrors).toHaveLength(0);
+    expect(pageErrors).toHaveLength(0);
   });
 
   test('should start game without errors', async ({ page }) => {
-    const consoleErrors: string[] = [];
-    const pageErrors: string[] = [];
-
-    page.on('console', (msg) => {
-      if (msg.type() === 'error') {
-        consoleErrors.push(msg.text());
-      }
-    });
-
-    page.on('pageerror', (error) => {
-      pageErrors.push(error.message);
-    });
-
-    await page.goto('http://localhost:5173');
     await page.waitForSelector('.game-container');
 
     // Click start playing
@@ -80,44 +70,18 @@ test.describe('Console Error Detection', () => {
     // Wait for any async errors
     await page.waitForTimeout(2000);
 
-    const criticalConsoleErrors = consoleErrors.filter(error =>
-      !error.includes('favicon') &&
-      !error.includes('404') &&
-      !error.toLowerCase().includes('warning')
-    );
-
-    const criticalPageErrors = pageErrors.filter(error =>
-      !error.includes('favicon') &&
-      !error.includes('404') &&
-      !error.toLowerCase().includes('warning')
-    );
-
-    if (criticalConsoleErrors.length > 0) {
-      console.log('Console Errors during game start:', criticalConsoleErrors);
+    if (consoleErrors.length > 0) {
+      console.log('Console Errors during game start:', consoleErrors);
     }
-    if (criticalPageErrors.length > 0) {
-      console.log('Page Errors during game start:', criticalPageErrors);
+    if (pageErrors.length > 0) {
+      console.log('Page Errors during game start:', pageErrors);
     }
 
-    expect(criticalConsoleErrors).toHaveLength(0);
-    expect(criticalPageErrors).toHaveLength(0);
+    expect(consoleErrors).toHaveLength(0);
+    expect(pageErrors).toHaveLength(0);
   });
 
   test('should interact with canvas without errors', async ({ page }) => {
-    const consoleErrors: string[] = [];
-    const pageErrors: string[] = [];
-
-    page.on('console', (msg) => {
-      if (msg.type() === 'error') {
-        consoleErrors.push(msg.text());
-      }
-    });
-
-    page.on('pageerror', (error) => {
-      pageErrors.push(error.message);
-    });
-
-    await page.goto('http://localhost:5173');
     await page.waitForSelector('.game-container');
 
     // Start game
@@ -143,26 +107,71 @@ test.describe('Console Error Detection', () => {
     // Wait for any interaction errors
     await page.waitForTimeout(1000);
 
-    const criticalConsoleErrors = consoleErrors.filter(error =>
-      !error.includes('favicon') &&
-      !error.includes('404') &&
-      !error.toLowerCase().includes('warning')
-    );
-
-    const criticalPageErrors = pageErrors.filter(error =>
-      !error.includes('favicon') &&
-      !error.includes('404') &&
-      !error.toLowerCase().includes('warning')
-    );
-
-    if (criticalConsoleErrors.length > 0) {
-      console.log('Console Errors during interaction:', criticalConsoleErrors);
+    if (consoleErrors.length > 0) {
+      console.log('Console Errors during interaction:', consoleErrors);
     }
-    if (criticalPageErrors.length > 0) {
-      console.log('Page Errors during interaction:', criticalPageErrors);
+    if (pageErrors.length > 0) {
+      console.log('Page Errors during interaction:', pageErrors);
     }
 
-    expect(criticalConsoleErrors).toHaveLength(0);
-    expect(criticalPageErrors).toHaveLength(0);
+    expect(consoleErrors).toHaveLength(0);
+    expect(pageErrors).toHaveLength(0);
+  });
+
+  test('should handle new puzzle generation without errors', async ({
+    page,
+  }) => {
+    await page.waitForSelector('.game-container');
+
+    // Start initial game
+    const startBtn = page.locator('.start-btn');
+    await startBtn.click();
+    await page.waitForSelector('.game-canvas', { timeout: 15000 });
+
+    // Generate new puzzle
+    const newPuzzleBtn = page.locator('.new-puzzle-btn');
+    await newPuzzleBtn.click();
+
+    // Wait for new puzzle to generate
+    await page.waitForTimeout(5000);
+
+    if (consoleErrors.length > 0) {
+      console.log('Console Errors during new puzzle:', consoleErrors);
+    }
+    if (pageErrors.length > 0) {
+      console.log('Page Errors during new puzzle:', pageErrors);
+    }
+
+    expect(consoleErrors).toHaveLength(0);
+    expect(pageErrors).toHaveLength(0);
+  });
+
+  test('should handle responsive design changes without errors', async ({
+    page,
+  }) => {
+    await page.waitForSelector('.game-container');
+
+    // Start game
+    const startBtn = page.locator('.start-btn');
+    await startBtn.click();
+    await page.waitForSelector('.game-canvas', { timeout: 15000 });
+
+    // Test mobile viewport
+    await page.setViewportSize({ width: 375, height: 667 });
+    await page.waitForTimeout(1000);
+
+    // Test desktop viewport
+    await page.setViewportSize({ width: 1200, height: 800 });
+    await page.waitForTimeout(1000);
+
+    if (consoleErrors.length > 0) {
+      console.log('Console Errors during viewport changes:', consoleErrors);
+    }
+    if (pageErrors.length > 0) {
+      console.log('Page Errors during viewport changes:', pageErrors);
+    }
+
+    expect(consoleErrors).toHaveLength(0);
+    expect(pageErrors).toHaveLength(0);
   });
 });
