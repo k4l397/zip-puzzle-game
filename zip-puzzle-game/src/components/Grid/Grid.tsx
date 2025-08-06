@@ -27,6 +27,7 @@ const Grid: React.FC<GridProps> = ({
     path: [],
   });
   const [validator, setValidator] = useState(() => new PathValidator(puzzle));
+  const [hoveredPosition, setHoveredPosition] = useState<Position | null>(null);
 
   const getCanvasSize = useCallback(() => {
     const totalSize =
@@ -141,16 +142,41 @@ const Grid: React.FC<GridProps> = ({
         ctx.stroke();
       }
 
-      // Draw filled circles at each path position for better visibility
-      ctx.fillStyle = GAME_CONFIG.colors.pipe;
-      for (const position of path) {
+      // Draw filled circles at each path position for better visibility and interaction
+      for (let i = 0; i < path.length; i++) {
+        const position = path[i];
         const pos = getCanvasPosition(position);
+
+        // Regular path circle
+        ctx.fillStyle = GAME_CONFIG.colors.pipe;
         ctx.beginPath();
         ctx.arc(pos.x, pos.y, GAME_CONFIG.pipeWidth / 3, 0, 2 * Math.PI);
         ctx.fill();
+
+        // Add subtle highlight for resumable positions (not the end position)
+        if (i < path.length - 1) {
+          ctx.strokeStyle = 'rgba(255, 255, 255, 0.6)';
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          ctx.arc(pos.x, pos.y, GAME_CONFIG.pipeWidth / 2, 0, 2 * Math.PI);
+          ctx.stroke();
+        }
+
+        // Add hover highlight
+        if (
+          hoveredPosition &&
+          hoveredPosition.x === position.x &&
+          hoveredPosition.y === position.y
+        ) {
+          ctx.strokeStyle = GAME_CONFIG.colors.success;
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.arc(pos.x, pos.y, GAME_CONFIG.pipeWidth, 0, 2 * Math.PI);
+          ctx.stroke();
+        }
       }
     },
-    [getCanvasPosition]
+    [getCanvasPosition, hoveredPosition]
   );
 
   const drawDots = useCallback(
@@ -212,12 +238,13 @@ const Grid: React.FC<GridProps> = ({
       const position = getGridPosition(event.clientX, event.clientY);
       if (!position) return;
 
-      // Check if starting from a dot
+      // Check if starting from dot 1 (initial start)
       const startDot = puzzle.dots.find(
         dot => dot.position.x === position.x && dot.position.y === position.y
       );
 
-      if (startDot && startDot.number === 1) {
+      if (startDot && startDot.number === 1 && currentPath.length === 0) {
+        // Starting new path from dot 1
         setDragState({
           isDragging: true,
           startPosition: position,
@@ -225,17 +252,46 @@ const Grid: React.FC<GridProps> = ({
           path: [position],
         });
         onPathUpdate([position]);
+      } else {
+        // Check if clicking on existing path to resume
+        const pathIndex = currentPath.findIndex(
+          pathPos => pathPos.x === position.x && pathPos.y === position.y
+        );
+
+        if (pathIndex !== -1) {
+          // Resume from this point in the path
+          const resumePath = currentPath.slice(0, pathIndex + 1);
+          setDragState({
+            isDragging: true,
+            startPosition: position,
+            currentPosition: position,
+            path: resumePath,
+          });
+          onPathUpdate(resumePath);
+        }
       }
     },
-    [disabled, getGridPosition, puzzle.dots, onPathUpdate]
+    [disabled, getGridPosition, puzzle.dots, currentPath, onPathUpdate]
   );
 
   const handleMouseMove = useCallback(
     (event: React.MouseEvent) => {
-      if (!dragState.isDragging || disabled) return;
-
       const position = getGridPosition(event.clientX, event.clientY);
-      if (!position) return;
+
+      if (!dragState.isDragging) {
+        // Update hover state for resumable positions
+        if (position && currentPath.length > 0) {
+          const isOnPath = currentPath.some(
+            pathPos => pathPos.x === position.x && pathPos.y === position.y
+          );
+          setHoveredPosition(isOnPath ? position : null);
+        } else {
+          setHoveredPosition(null);
+        }
+        return;
+      }
+
+      if (disabled || !position) return;
 
       // Check if this is a new position
       const lastPosition = dragState.path[dragState.path.length - 1];
@@ -269,7 +325,14 @@ const Grid: React.FC<GridProps> = ({
         onPathUpdate(newPath);
       }
     },
-    [dragState, disabled, getGridPosition, isValidMove, onPathUpdate]
+    [
+      dragState,
+      disabled,
+      getGridPosition,
+      isValidMove,
+      onPathUpdate,
+      currentPath,
+    ]
   );
 
   const handleMouseUp = useCallback(() => {
@@ -363,7 +426,10 @@ const Grid: React.FC<GridProps> = ({
         onMouseDown={handleMouseDown}
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
-        onMouseLeave={handleMouseUp}
+        onMouseLeave={() => {
+          setHoveredPosition(null);
+          handleMouseUp();
+        }}
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}

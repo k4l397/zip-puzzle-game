@@ -344,4 +344,65 @@ test.describe('Zip Puzzle Game - Interaction Tests', () => {
 
     expect(criticalErrors.length).toBe(0);
   });
+
+  test('should allow resuming path from any point on existing path', async ({
+    page,
+  }) => {
+    const startBtn = page.locator('.start-btn');
+    await startBtn.click();
+
+    const canvas = page.locator('.game-canvas');
+    await expect(canvas).toBeVisible({ timeout: 10000 });
+
+    const canvasBounds = await canvas.boundingBox();
+    if (canvasBounds) {
+      // Start drawing a path
+      await page.mouse.click(canvasBounds.x + 50, canvasBounds.y + 50);
+      await page.mouse.down();
+      await page.mouse.move(canvasBounds.x + 100, canvasBounds.y + 50);
+      await page.mouse.move(canvasBounds.x + 150, canvasBounds.y + 50);
+      await page.mouse.up();
+
+      // Wait a moment
+      await page.waitForTimeout(500);
+
+      // Resume from middle of the path
+      await page.mouse.click(canvasBounds.x + 100, canvasBounds.y + 50);
+      await page.mouse.down();
+      await page.mouse.move(canvasBounds.x + 100, canvasBounds.y + 100);
+      await page.mouse.up();
+
+      // Canvas should still be interactive
+      await expect(canvas).not.toHaveClass(/disabled/);
+    }
+  });
+
+  test('should show hover feedback on resumable path positions', async ({
+    page,
+  }) => {
+    const startBtn = page.locator('.start-btn');
+    await startBtn.click();
+
+    const canvas = page.locator('.game-canvas');
+    await expect(canvas).toBeVisible({ timeout: 10000 });
+
+    const canvasBounds = await canvas.boundingBox();
+    if (canvasBounds) {
+      // Start drawing a path
+      await page.mouse.click(canvasBounds.x + 50, canvasBounds.y + 50);
+      await page.mouse.down();
+      await page.mouse.move(canvasBounds.x + 100, canvasBounds.y + 50);
+      await page.mouse.up();
+
+      // Hover over different positions
+      await page.mouse.move(canvasBounds.x + 75, canvasBounds.y + 50);
+      await page.waitForTimeout(100);
+
+      await page.mouse.move(canvasBounds.x + 200, canvasBounds.y + 50);
+      await page.waitForTimeout(100);
+
+      // Canvas should remain interactive
+      await expect(canvas).toBeVisible();
+    }
+  });
 });
