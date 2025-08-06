@@ -1,0 +1,69 @@
+.timer-container {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  background-color: white;
+  border-radius: 0.5rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e5e7eb;
+}
+
+.timer-label {
+  font-weight: 500;
+  color: #374151;
+  font-size: 0.875rem;
+}
+
+.timer-display {
+  font-family: 'Courier New', Monaco, monospace;
+  font-size: 1.25rem;
+  font-weight: bold;
+  color: #1f2937;
+  min-width: 80px;
+  text-align: right;
+  transition: color 0.2s ease;
+}
+
+.timer-display.running {
+  color: #2563eb;
+}
+
+/* Mobile responsiveness */
+@media (max-width: 480px) {
+  .timer-container {
+    padding: 0.5rem 0.75rem;
+    gap: 0.5rem;
+  }
+
+  .timer-display {
+    font-size: 1.125rem;
+    min-width: 70px;
+  }
+
+  .timer-label {
+    font-size: 0.8125rem;
+  }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .timer-container {
+    border: 2px solid #374151;
+  }
+
+  .timer-display {
+    color: #000;
+  }
+
+  .timer-display.running {
+    color: #1d4ed8;
+  }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  .timer-display {
+    transition: none;
+  }
+}

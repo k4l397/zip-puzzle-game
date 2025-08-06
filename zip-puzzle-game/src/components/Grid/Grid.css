@@ -1,0 +1,92 @@
+.grid-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 1rem;
+}
+
+.game-canvas {
+  border: 2px solid #e5e7eb;
+  border-radius: 0.5rem;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  background-color: white;
+  cursor: crosshair;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+}
+
+.game-canvas.disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.game-canvas:hover:not(.disabled) {
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+}
+
+/* Mobile optimizations */
+@media (max-width: 768px) {
+  .grid-container {
+    padding: 0.5rem;
+  }
+
+  .game-canvas {
+    max-width: calc(100vw - 2rem);
+    max-height: calc(100vh - 200px);
+    width: auto;
+    height: auto;
+  }
+}
+
+@media (max-width: 480px) {
+  .grid-container {
+    padding: 0.25rem;
+  }
+
+  .game-canvas {
+    max-width: calc(100vw - 1rem);
+    border-width: 1px;
+  }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .game-canvas {
+    border: 3px solid #000;
+  }
+
+  .game-canvas.disabled {
+    border-color: #666;
+  }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  .game-canvas {
+    transition: none;
+  }
+
+  .game-canvas:hover:not(.disabled) {
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  }
+}
+
+/* Focus styles for accessibility */
+.game-canvas:focus {
+  outline: 2px solid #2563eb;
+  outline-offset: 2px;
+}
+
+/* Prevent text selection during drag operations */
+.grid-container {
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -khtml-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
