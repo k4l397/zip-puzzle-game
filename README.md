@@ -2,7 +2,9 @@
 
 A modern, web-based puzzle game inspired by LinkedIn's Zip puzzle. Connect numbered dots in sequence by drawing a continuous path that fills the entire grid.
 
-![Game Screenshot](https://via.placeholder.com/600x400/2563eb/ffffff?text=Zip+Puzzle+Game)
+**🔗 GitHub Repository**: [https://github.com/k4l397/zip-puzzle-game](https://github.com/k4l397/zip-puzzle-game)
+
+![Game Screenshot](https://via.placeholder.com/600x400/22c55e/ffffff?text=Zip+Puzzle+Game)
 
 ## 🎮 How to Play
 

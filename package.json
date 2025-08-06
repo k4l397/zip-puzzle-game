@@ -1,8 +1,28 @@
 {
   "name": "zip-puzzle-game",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.0.0",
   "type": "module",
+  "description": "Modern web-based Zip puzzle game with React + TypeScript + Canvas API",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/k4l397/zip-puzzle-game.git"
+  },
+  "homepage": "https://github.com/k4l397/zip-puzzle-game",
+  "bugs": {
+    "url": "https://github.com/k4l397/zip-puzzle-game/issues"
+  },
+  "author": "Kyle Welch",
+  "license": "MIT",
+  "keywords": [
+    "puzzle",
+    "game",
+    "react",
+    "typescript",
+    "canvas",
+    "zip-puzzle",
+    "web-game"
+  ],
   "scripts": {
     "dev": "vite --host",
     "build": "tsc -b && vite build",
