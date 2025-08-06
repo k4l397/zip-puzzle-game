@@ -1,7 +1,7 @@
 import React, { useState, useCallback, useEffect } from "react";
 import Cell from "../Cell/Cell";
 import Dot from "../Dot/Dot";
-import Path from "../Path/Path";
+import PathSVG from "../Path/PathSVG";
 import "./Grid.css";
 
 export interface Position {
@@ -199,15 +199,6 @@ const Grid: React.FC<GridProps> = ({
     }
   }, [currentPath, grid, size, onGameComplete]);
 
-  // Calculate cell size for path rendering
-  const getCellSize = () => {
-    if (size === 3) return 70;
-    if (size === 4) return 60;
-    if (size === 5) return 50;
-    if (size === 6) return 45;
-    return 60;
-  };
-
   return (
     <div className="grid-container">
       <div
@@ -304,7 +295,7 @@ const Grid: React.FC<GridProps> = ({
             </div>
           )),
         )}
-        <Path path={currentPath} gridSize={size} cellSize={getCellSize()} />
+        <PathSVG path={currentPath} gridSize={size} />
       </div>
     </div>
   );

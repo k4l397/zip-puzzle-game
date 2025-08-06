@@ -25,11 +25,13 @@ const Path: React.FC<PathProps> = ({ path, cellSize }) => {
       const next = path[i + 1];
       const prev = i > 0 ? path[i - 1] : null;
 
-      // Calculate positions in pixels
-      const currentX = current.x * cellSize + cellSize / 2;
-      const currentY = current.y * cellSize + cellSize / 2;
-      const nextX = next.x * cellSize + cellSize / 2;
-      const nextY = next.y * cellSize + cellSize / 2;
+      // Calculate positions in pixels relative to grid coordinate system
+      // Each cell is cellSize + gap apart, positioned at cell center
+      const cellGap = 2;
+      const currentX = current.x * (cellSize + cellGap) + cellSize / 2;
+      const currentY = current.y * (cellSize + cellGap) + cellSize / 2;
+      const nextX = next.x * (cellSize + cellGap) + cellSize / 2;
+      const nextY = next.y * (cellSize + cellGap) + cellSize / 2;
 
       // Determine direction of movement
       const deltaX = next.x - current.x;
@@ -140,13 +142,15 @@ const Path: React.FC<PathProps> = ({ path, cellSize }) => {
   };
 
   // Add end caps for start and end of path
+  const cellGap = 2;
+
   const startCap = path.length > 0 && (
     <div
       key="start-cap"
       className="path-segment path-start-cap"
       style={{
-        left: path[0].x * cellSize + cellSize / 2 - 8,
-        top: path[0].y * cellSize + cellSize / 2 - 8,
+        left: path[0].x * (cellSize + cellGap) + cellSize / 2 - 8,
+        top: path[0].y * (cellSize + cellGap) + cellSize / 2 - 8,
         width: 16,
         height: 16,
       }}
@@ -158,8 +162,8 @@ const Path: React.FC<PathProps> = ({ path, cellSize }) => {
       key="end-cap"
       className="path-segment path-end-cap"
       style={{
-        left: path[path.length - 1].x * cellSize + cellSize / 2 - 8,
-        top: path[path.length - 1].y * cellSize + cellSize / 2 - 8,
+        left: path[path.length - 1].x * (cellSize + cellGap) + cellSize / 2 - 8,
+        top: path[path.length - 1].y * (cellSize + cellGap) + cellSize / 2 - 8,
         width: 16,
         height: 16,
       }}
@@ -169,7 +173,14 @@ const Path: React.FC<PathProps> = ({ path, cellSize }) => {
   return (
     <div
       className="continuous-path"
-      style={{ position: "absolute", top: 0, left: 0, pointerEvents: "none" }}
+      style={{
+        position: "absolute",
+        top: 20,
+        left: 20,
+        pointerEvents: "none",
+        width: "calc(100% - 40px)",
+        height: "calc(100% - 40px)",
+      }}
     >
       {generatePathSegments()}
       {startCap}
