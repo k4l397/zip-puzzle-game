@@ -98,7 +98,7 @@ const SimplePath: React.FC<SimplePathProps> = ({ path, gridSize }) => {
               height: "12px",
               transform: "translateY(-50%)",
             }}
-          />
+          />,
         );
       } else if (isVertical) {
         // Vertical line
@@ -117,7 +117,7 @@ const SimplePath: React.FC<SimplePathProps> = ({ path, gridSize }) => {
               height: `${height}%`,
               transform: "translateX(-50%)",
             }}
-          />
+          />,
         );
       }
     }
@@ -130,10 +130,10 @@ const SimplePath: React.FC<SimplePathProps> = ({ path, gridSize }) => {
       className="simple-path-container"
       style={{
         position: "absolute",
-        top: 0,
-        left: 0,
-        width: "100%",
-        height: "100%",
+        top: 20,
+        left: 20,
+        width: "calc(100% - 40px)",
+        height: "calc(100% - 40px)",
         pointerEvents: "none",
         zIndex: 5,
       }}
