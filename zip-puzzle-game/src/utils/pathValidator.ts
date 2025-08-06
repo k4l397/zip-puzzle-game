@@ -38,6 +38,11 @@ export class PathValidator {
       errors.push('Dots are not connected in ascending numerical order');
     }
 
+    // Check if path ends on the final numbered dot
+    if (!this.doesPathEndOnFinalDot(path)) {
+      errors.push('Path must end on the highest numbered dot');
+    }
+
     // Check for path overlaps (same cell visited twice)
     if (!this.isPathUnique(path)) {
       errors.push('Path contains overlapping cells');
@@ -96,12 +101,14 @@ export class PathValidator {
    * Checks if all dots are visited in ascending numerical order
    */
   private areDotsConnectedInOrder(path: Position[]): boolean {
-    const sortedDots = [...this.puzzle.dots].sort((a, b) => a.number - b.number);
+    const sortedDots = [...this.puzzle.dots].sort(
+      (a, b) => a.number - b.number
+    );
     let lastFoundIndex = -1;
 
     for (const dot of sortedDots) {
-      const dotIndex = path.findIndex(pos =>
-        pos.x === dot.position.x && pos.y === dot.position.y
+      const dotIndex = path.findIndex(
+        pos => pos.x === dot.position.x && pos.y === dot.position.y
       );
 
       if (dotIndex === -1) {
@@ -118,6 +125,27 @@ export class PathValidator {
     }
 
     return true;
+  }
+
+  /**
+   * Checks if the path ends on the highest numbered dot
+   */
+  private doesPathEndOnFinalDot(path: Position[]): boolean {
+    if (path.length === 0 || this.puzzle.dots.length === 0) {
+      return false;
+    }
+
+    // Find the highest numbered dot
+    const finalDot = this.puzzle.dots.reduce((max, dot) =>
+      dot.number > max.number ? dot : max
+    );
+
+    // Check if path ends on this dot
+    const lastPosition = path[path.length - 1];
+    return (
+      lastPosition.x === finalDot.position.x &&
+      lastPosition.y === finalDot.position.y
+    );
   }
 
   /**
@@ -148,8 +176,12 @@ export class PathValidator {
    * Checks if a single position is within grid boundaries
    */
   private isWithinBounds(pos: Position): boolean {
-    return pos.x >= 0 && pos.x < this.puzzle.gridSize &&
-           pos.y >= 0 && pos.y < this.puzzle.gridSize;
+    return (
+      pos.x >= 0 &&
+      pos.x < this.puzzle.gridSize &&
+      pos.y >= 0 &&
+      pos.y < this.puzzle.gridSize
+    );
   }
 
   /**
@@ -172,13 +204,15 @@ export class PathValidator {
    */
   public getConnectedDots(path: Position[]): Dot[] {
     const connectedDots: Dot[] = [];
-    const sortedDots = [...this.puzzle.dots].sort((a, b) => a.number - b.number);
+    const sortedDots = [...this.puzzle.dots].sort(
+      (a, b) => a.number - b.number
+    );
 
     let lastFoundIndex = -1;
 
     for (const dot of sortedDots) {
-      const dotIndex = path.findIndex(pos =>
-        pos.x === dot.position.x && pos.y === dot.position.y
+      const dotIndex = path.findIndex(
+        pos => pos.x === dot.position.x && pos.y === dot.position.y
       );
 
       if (dotIndex === -1 || dotIndex <= lastFoundIndex) {
@@ -210,21 +244,29 @@ export class PathValidator {
     if (path.length === 0) {
       const firstDot = this.puzzle.dots.find(dot => dot.number === 1);
       if (firstDot) {
-        hints.push(`Start by clicking on dot ${firstDot.number} at position (${firstDot.position.x}, ${firstDot.position.y})`);
+        hints.push(
+          `Start by clicking on dot ${firstDot.number} at position (${firstDot.position.x}, ${firstDot.position.y})`
+        );
       }
       return hints;
     }
 
     const nextDot = this.getNextExpectedDot(path);
     if (nextDot) {
-      hints.push(`Next: Connect to dot ${nextDot.number} at position (${nextDot.position.x}, ${nextDot.position.y})`);
+      hints.push(
+        `Next: Connect to dot ${nextDot.number} at position (${nextDot.position.x}, ${nextDot.position.y})`
+      );
     }
 
     const completion = this.getCompletionPercentage(path);
-    hints.push(`Progress: ${completion}% complete (${path.length}/${this.puzzle.gridSize * this.puzzle.gridSize} cells)`);
+    hints.push(
+      `Progress: ${completion}% complete (${path.length}/${this.puzzle.gridSize * this.puzzle.gridSize} cells)`
+    );
 
     if (!this.isPathContinuous(path)) {
-      hints.push('Warning: Path contains invalid moves (only orthogonal moves allowed)');
+      hints.push(
+        'Warning: Path contains invalid moves (only orthogonal moves allowed)'
+      );
     }
 
     return hints;
@@ -237,7 +279,11 @@ export class PathValidator {
     if (path.length === 0) return true;
 
     // Check basic validity
-    if (!this.isPathContinuous(path) || !this.isPathUnique(path) || !this.isPathWithinBounds(path)) {
+    if (
+      !this.isPathContinuous(path) ||
+      !this.isPathUnique(path) ||
+      !this.isPathWithinBounds(path)
+    ) {
       return false;
     }
 
@@ -257,8 +303,8 @@ export class PathValidator {
     // Count how many dots should be reachable by now
     let count = 0;
     for (const dot of this.puzzle.dots) {
-      const dotIndex = path.findIndex(pos =>
-        pos.x === dot.position.x && pos.y === dot.position.y
+      const dotIndex = path.findIndex(
+        pos => pos.x === dot.position.x && pos.y === dot.position.y
       );
       if (dotIndex !== -1) {
         count++;
@@ -275,7 +321,10 @@ export class PathValidator {
 /**
  * Convenience function to quickly validate a solution
  */
-export function validatePuzzleSolution(puzzle: Puzzle, path: Position[]): boolean {
+export function validatePuzzleSolution(
+  puzzle: Puzzle,
+  path: Position[]
+): boolean {
   const validator = new PathValidator(puzzle);
   const result = validator.validateSolution(path);
   return result.isValid && result.isComplete;
@@ -284,7 +333,11 @@ export function validatePuzzleSolution(puzzle: Puzzle, path: Position[]): boolea
 /**
  * Quick check if a move is valid
  */
-export function isValidPuzzleMove(puzzle: Puzzle, from: Position, to: Position): boolean {
+export function isValidPuzzleMove(
+  puzzle: Puzzle,
+  from: Position,
+  to: Position
+): boolean {
   const validator = new PathValidator(puzzle);
   return validator.isValidMove(from, to);
 }

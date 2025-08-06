@@ -133,6 +133,19 @@ const Game: React.FC = () => {
           lastFoundIndex = dotIndex;
         }
 
+        // Additional check: path must end on the highest numbered dot
+        if (isValidSolution && sortedDots.length > 0) {
+          const finalDot = sortedDots[sortedDots.length - 1];
+          const lastPathPosition = path[path.length - 1];
+          const endsOnFinalDot =
+            lastPathPosition.x === finalDot.position.x &&
+            lastPathPosition.y === finalDot.position.y;
+
+          if (!endsOnFinalDot) {
+            isValidSolution = false;
+          }
+        }
+
         if (isValidSolution) {
           handleGameComplete();
         }
