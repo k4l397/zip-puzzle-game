@@ -5,13 +5,13 @@ export const GAME_CONFIG: GameConfig = {
   maxGridSize: 8,
   defaultGridSize: 4,
   cellSize: 60,
-  dotRadius: 20,
-  pipeWidth: 8,
+  dotRadius: 24,
+  pipeWidth: 20,
   colors: {
     grid: '#e5e5e5',
-    dot: '#2563eb',
+    dot: '#000000',
     dotText: '#ffffff',
-    pipe: '#1d4ed8',
+    pipe: '#22c55e',
     background: '#f8fafc',
     success: '#10b981',
   },
@@ -20,7 +20,7 @@ export const GAME_CONFIG: GameConfig = {
 export const CANVAS_CONFIG = {
   padding: 40,
   gridLineWidth: 1,
-  dotBorderWidth: 3,
+  dotBorderWidth: 4,
   animationDuration: 300,
   touchSensitivity: 10,
 };

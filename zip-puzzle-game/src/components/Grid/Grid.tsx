@@ -147,20 +147,11 @@ const Grid: React.FC<GridProps> = ({
         const position = path[i];
         const pos = getCanvasPosition(position);
 
-        // Regular path circle
+        // Regular path circle - smaller than before to let pipe thickness show
         ctx.fillStyle = GAME_CONFIG.colors.pipe;
         ctx.beginPath();
-        ctx.arc(pos.x, pos.y, GAME_CONFIG.pipeWidth / 3, 0, 2 * Math.PI);
+        ctx.arc(pos.x, pos.y, GAME_CONFIG.pipeWidth / 6, 0, 2 * Math.PI);
         ctx.fill();
-
-        // Add subtle highlight for resumable positions (not the end position)
-        if (i < path.length - 1) {
-          ctx.strokeStyle = 'rgba(255, 255, 255, 0.6)';
-          ctx.lineWidth = 1;
-          ctx.beginPath();
-          ctx.arc(pos.x, pos.y, GAME_CONFIG.pipeWidth / 2, 0, 2 * Math.PI);
-          ctx.stroke();
-        }
 
         // Add hover highlight
         if (
@@ -169,9 +160,9 @@ const Grid: React.FC<GridProps> = ({
           hoveredPosition.y === position.y
         ) {
           ctx.strokeStyle = GAME_CONFIG.colors.success;
-          ctx.lineWidth = 2;
+          ctx.lineWidth = 3;
           ctx.beginPath();
-          ctx.arc(pos.x, pos.y, GAME_CONFIG.pipeWidth, 0, 2 * Math.PI);
+          ctx.arc(pos.x, pos.y, GAME_CONFIG.pipeWidth / 2 + 2, 0, 2 * Math.PI);
           ctx.stroke();
         }
       }
@@ -184,36 +175,37 @@ const Grid: React.FC<GridProps> = ({
       puzzle.dots.forEach(dot => {
         const pos = getCanvasPosition(dot.position);
 
-        // Draw dot circle with shadow for better visibility
-        ctx.fillStyle = GAME_CONFIG.colors.dot;
-        ctx.shadowColor = 'rgba(0, 0, 0, 0.2)';
-        ctx.shadowBlur = 4;
-        ctx.shadowOffsetX = 1;
-        ctx.shadowOffsetY = 1;
+        // Draw outer white circle for better contrast
+        ctx.fillStyle = 'white';
+        ctx.beginPath();
+        ctx.arc(pos.x, pos.y, GAME_CONFIG.dotRadius + 2, 0, 2 * Math.PI);
+        ctx.fill();
 
+        // Draw main dot circle
+        ctx.fillStyle = GAME_CONFIG.colors.dot;
         ctx.beginPath();
         ctx.arc(pos.x, pos.y, GAME_CONFIG.dotRadius, 0, 2 * Math.PI);
         ctx.fill();
+
+        // Draw dot number with better contrast
+        ctx.fillStyle = GAME_CONFIG.colors.dotText;
+        ctx.font = 'bold 18px -apple-system, BlinkMacSystemFont, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+
+        // Add text shadow for better readability
+        ctx.shadowColor = 'rgba(0, 0, 0, 0.5)';
+        ctx.shadowBlur = 2;
+        ctx.shadowOffsetX = 1;
+        ctx.shadowOffsetY = 1;
+
+        ctx.fillText(dot.number.toString(), pos.x, pos.y);
 
         // Reset shadow
         ctx.shadowColor = 'transparent';
         ctx.shadowBlur = 0;
         ctx.shadowOffsetX = 0;
         ctx.shadowOffsetY = 0;
-
-        // Draw dot border
-        ctx.strokeStyle = 'white';
-        ctx.lineWidth = CANVAS_CONFIG.dotBorderWidth;
-        ctx.beginPath();
-        ctx.arc(pos.x, pos.y, GAME_CONFIG.dotRadius, 0, 2 * Math.PI);
-        ctx.stroke();
-
-        // Draw dot number
-        ctx.fillStyle = GAME_CONFIG.colors.dotText;
-        ctx.font = 'bold 16px -apple-system, BlinkMacSystemFont, sans-serif';
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.fillText(dot.number.toString(), pos.x, pos.y);
       });
     },
     [puzzle.dots, getCanvasPosition]
