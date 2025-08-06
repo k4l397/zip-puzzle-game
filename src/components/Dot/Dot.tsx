@@ -11,6 +11,7 @@ interface DotProps {
   position: Position;
   isConnected?: boolean;
   isActive?: boolean;
+  isNext?: boolean;
 }
 
 const Dot: React.FC<DotProps> = ({
@@ -18,11 +19,13 @@ const Dot: React.FC<DotProps> = ({
   position,
   isConnected = false,
   isActive = false,
+  isNext = false,
 }) => {
   const dotClass = [
     "dot",
     isConnected && "dot--connected",
     isActive && "dot--active",
+    isNext && "dot--next",
   ]
     .filter(Boolean)
     .join(" ");

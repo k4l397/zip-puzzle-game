@@ -1,125 +1,153 @@
 .dot {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 32px;
-  height: 32px;
-  background: linear-gradient(135deg, #ff6b6b, #ee5a52);
-  border: 3px solid #ffffff;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: 700;
-  font-size: 0.9rem;
-  color: white;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
-  box-shadow: 0 4px 12px rgba(255, 107, 107, 0.4);
-  z-index: 10;
-  transition: all 0.2s ease;
-  cursor: pointer;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 32px;
+    height: 32px;
+    background: linear-gradient(135deg, #ff6b6b, #ee5a52);
+    border: 3px solid #ffffff;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 0.9rem;
+    color: white;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 4px 12px rgba(255, 107, 107, 0.4);
+    z-index: 10;
+    transition: all 0.2s ease;
+    cursor: pointer;
 }
 
 .dot:hover {
-  transform: translate(-50%, -50%) scale(1.1);
-  box-shadow: 0 6px 16px rgba(255, 107, 107, 0.5);
+    transform: translate(-50%, -50%) scale(1.1);
+    box-shadow: 0 6px 16px rgba(255, 107, 107, 0.5);
 }
 
 .dot--connected {
-  background: linear-gradient(135deg, #48bb78, #38a169);
-  box-shadow: 0 4px 12px rgba(72, 187, 120, 0.4);
+    background: linear-gradient(135deg, #48bb78, #38a169);
+    box-shadow: 0 4px 12px rgba(72, 187, 120, 0.4);
 }
 
 .dot--connected:hover {
-  box-shadow: 0 6px 16px rgba(72, 187, 120, 0.5);
+    box-shadow: 0 6px 16px rgba(72, 187, 120, 0.5);
 }
 
 .dot--active {
-  background: linear-gradient(135deg, #4299e1, #3182ce);
-  box-shadow: 0 4px 12px rgba(66, 153, 225, 0.4);
-  animation: dotPulse 2s ease-in-out infinite;
+    background: linear-gradient(135deg, #4299e1, #3182ce);
+    box-shadow: 0 4px 12px rgba(66, 153, 225, 0.4);
+    animation: dotPulse 2s ease-in-out infinite;
 }
 
 .dot--active:hover {
-  box-shadow: 0 6px 16px rgba(66, 153, 225, 0.5);
+    box-shadow: 0 6px 16px rgba(66, 153, 225, 0.5);
+}
+
+.dot--next {
+    background: linear-gradient(135deg, #ffd93d, #ffb300);
+    box-shadow: 0 4px 12px rgba(255, 217, 61, 0.4);
+    animation: nextDotPulse 1.5s ease-in-out infinite;
+}
+
+.dot--next:hover {
+    box-shadow: 0 6px 16px rgba(255, 217, 61, 0.5);
 }
 
 .dot-number {
-  line-height: 1;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  user-select: none;
+    line-height: 1;
+    font-family:
+        -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    user-select: none;
 }
 
 @keyframes dotPulse {
-  0%, 100% {
-    transform: translate(-50%, -50%) scale(1);
-  }
-  50% {
-    transform: translate(-50%, -50%) scale(1.05);
-  }
+    0%,
+    100% {
+        transform: translate(-50%, -50%) scale(1);
+    }
+    50% {
+        transform: translate(-50%, -50%) scale(1.05);
+    }
+}
+
+@keyframes nextDotPulse {
+    0%,
+    100% {
+        transform: translate(-50%, -50%) scale(1);
+        box-shadow: 0 4px 12px rgba(255, 217, 61, 0.4);
+    }
+    50% {
+        transform: translate(-50%, -50%) scale(1.1);
+        box-shadow: 0 6px 20px rgba(255, 217, 61, 0.6);
+    }
 }
 
 /* Dot entrance animation */
 .dot {
-  animation: dotAppear 0.5s ease-out;
+    animation: dotAppear 0.5s ease-out;
 }
 
 @keyframes dotAppear {
-  from {
-    opacity: 0;
-    transform: translate(-50%, -50%) scale(0);
-  }
-  to {
-    opacity: 1;
-    transform: translate(-50%, -50%) scale(1);
-  }
+    from {
+        opacity: 0;
+        transform: translate(-50%, -50%) scale(0);
+    }
+    to {
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(1);
+    }
 }
 
 /* Mobile responsiveness */
 @media (max-width: 768px) {
-  .dot {
-    width: 28px;
-    height: 28px;
-    font-size: 0.8rem;
-    border-width: 2px;
-  }
+    .dot {
+        width: 28px;
+        height: 28px;
+        font-size: 0.8rem;
+        border-width: 2px;
+    }
 }
 
 @media (max-width: 480px) {
-  .dot {
-    width: 24px;
-    height: 24px;
-    font-size: 0.75rem;
-    border-width: 2px;
-  }
+    .dot {
+        width: 24px;
+        height: 24px;
+        font-size: 0.75rem;
+        border-width: 2px;
+    }
 }
 
 /* Touch devices */
 @media (hover: none) and (pointer: coarse) {
-  .dot:active {
-    transform: translate(-50%, -50%) scale(0.95);
-  }
+    .dot:active {
+        transform: translate(-50%, -50%) scale(0.95);
+    }
 }
 
 /* High contrast mode support */
 @media (prefers-contrast: high) {
-  .dot {
-    border-width: 4px;
-    border-color: #000000;
-  }
+    .dot {
+        border-width: 4px;
+        border-color: #000000;
+    }
 
-  .dot--connected {
-    background: #008800;
-  }
+    .dot--connected {
+        background: #008800;
+    }
 
-  .dot--active {
-    background: #0066cc;
-  }
+    .dot--active {
+        background: #0066cc;
+    }
+
+    .dot--next {
+        background: #ffaa00;
+    }
 }
 
 /* Accessibility */
 .dot:focus {
-  outline: 3px solid #4299e1;
-  outline-offset: 3px;
+    outline: 3px solid #4299e1;
+    outline-offset: 3px;
 }
