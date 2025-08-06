@@ -1,7 +1,7 @@
 import React, { useState, useCallback, useEffect } from "react";
 import Cell from "../Cell/Cell";
 import Dot from "../Dot/Dot";
-import SimplePath from "../Path/SimplePath";
+import SimplePathOverlay from "../Path/SimplePathOverlay";
 import "./Grid.css";
 
 export interface Position {
@@ -295,7 +295,7 @@ const Grid: React.FC<GridProps> = ({
             </div>
           )),
         )}
-        <SimplePath path={currentPath} gridSize={size} />
+        <SimplePathOverlay path={currentPath} gridSize={size} />
       </div>
     </div>
   );
