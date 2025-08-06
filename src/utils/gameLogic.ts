@@ -20,15 +20,18 @@ export function arePositionsAdjacent(pos1: Position, pos2: Position): boolean {
 /**
  * Check if a position exists in a path
  */
-export function isPositionInPath(position: Position, path: Position[]): boolean {
-  return path.some(pos => pos.x === position.x && pos.y === position.y);
+export function isPositionInPath(
+  position: Position,
+  path: Position[],
+): boolean {
+  return path.some((pos) => pos.x === position.x && pos.y === position.y);
 }
 
 /**
  * Get the index of a position in a path, or -1 if not found
  */
 export function getPositionIndex(position: Position, path: Position[]): number {
-  return path.findIndex(pos => pos.x === position.x && pos.y === position.y);
+  return path.findIndex((pos) => pos.x === position.x && pos.y === position.y);
 }
 
 /**
@@ -40,13 +43,15 @@ export function validateDotOrder(path: Position[], dots: Dot[]): boolean {
 
   for (const pathPos of path) {
     const dotAtPosition = dots.find(
-      dot => dot.position.x === pathPos.x && dot.position.y === pathPos.y
+      (dot) => dot.position.x === pathPos.x && dot.position.y === pathPos.y,
     );
 
     if (dotAtPosition) {
       // Check if this is the expected next dot
-      if (currentDotIndex >= sortedDots.length ||
-          dotAtPosition.number !== sortedDots[currentDotIndex].number) {
+      if (
+        currentDotIndex >= sortedDots.length ||
+        dotAtPosition.number !== sortedDots[currentDotIndex].number
+      ) {
         return false;
       }
       currentDotIndex++;
@@ -64,7 +69,7 @@ export function areAllDotsVisited(path: Position[], dots: Dot[]): boolean {
 
   for (const pathPos of path) {
     const dotAtPosition = dots.find(
-      dot => dot.position.x === pathPos.x && dot.position.y === pathPos.y
+      (dot) => dot.position.x === pathPos.x && dot.position.y === pathPos.y,
     );
     if (dotAtPosition) {
       visitedDots.add(dotAtPosition.number);
@@ -77,14 +82,21 @@ export function areAllDotsVisited(path: Position[], dots: Dot[]): boolean {
 /**
  * Check if the path covers the entire grid
  */
-export function isGridFullyCovered(path: Position[], gridSize: number): boolean {
+export function isGridFullyCovered(
+  path: Position[],
+  gridSize: number,
+): boolean {
   return path.length === gridSize * gridSize;
 }
 
 /**
  * Validate if the puzzle is complete
  */
-export function isPuzzleComplete(path: Position[], dots: Dot[], gridSize: number): boolean {
+export function isPuzzleComplete(
+  path: Position[],
+  dots: Dot[],
+  gridSize: number,
+): boolean {
   return (
     validateDotOrder(path, dots) &&
     areAllDotsVisited(path, dots) &&
@@ -96,12 +108,11 @@ export function isPuzzleComplete(path: Position[], dots: Dot[], gridSize: number
  * Get the next expected dot number based on the current path
  */
 export function getNextExpectedDot(path: Position[], dots: Dot[]): number {
-  const sortedDots = [...dots].sort((a, b) => a.number - b.number);
   let connectedDots = 0;
 
   for (const pathPos of path) {
     const dotAtPath = dots.find(
-      dot => dot.position.x === pathPos.x && dot.position.y === pathPos.y
+      (dot) => dot.position.x === pathPos.x && dot.position.y === pathPos.y,
     );
     if (dotAtPath) {
       connectedDots = Math.max(connectedDots, dotAtPath.number);
@@ -117,11 +128,15 @@ export function getNextExpectedDot(path: Position[], dots: Dot[]): number {
 export function isValidPathSegment(
   currentPath: Position[],
   newPosition: Position,
-  gridSize: number
+  gridSize: number,
 ): boolean {
   // Check bounds
-  if (newPosition.x < 0 || newPosition.x >= gridSize ||
-      newPosition.y < 0 || newPosition.y >= gridSize) {
+  if (
+    newPosition.x < 0 ||
+    newPosition.x >= gridSize ||
+    newPosition.y < 0 ||
+    newPosition.y >= gridSize
+  ) {
     return false;
   }
 
@@ -130,9 +145,11 @@ export function isValidPathSegment(
     // Allow if it's the previous position (for backing up)
     const lastIndex = currentPath.length - 1;
     const secondLastIndex = lastIndex - 1;
-    return secondLastIndex >= 0 &&
-           currentPath[secondLastIndex].x === newPosition.x &&
-           currentPath[secondLastIndex].y === newPosition.y;
+    return (
+      secondLastIndex >= 0 &&
+      currentPath[secondLastIndex].x === newPosition.x &&
+      currentPath[secondLastIndex].y === newPosition.y
+    );
   }
 
   // Check adjacency to last position
@@ -155,7 +172,7 @@ export function generateSampleDots(gridSize: number): Dot[] {
       dots.push(
         { position: { x: 0, y: 0 }, number: 1 },
         { position: { x: 1, y: 2 }, number: 2 },
-        { position: { x: 2, y: 1 }, number: 3 }
+        { position: { x: 2, y: 1 }, number: 3 },
       );
       break;
     case 4:
@@ -163,7 +180,7 @@ export function generateSampleDots(gridSize: number): Dot[] {
         { position: { x: 0, y: 1 }, number: 1 },
         { position: { x: 1, y: 3 }, number: 2 },
         { position: { x: 3, y: 2 }, number: 3 },
-        { position: { x: 2, y: 0 }, number: 4 }
+        { position: { x: 2, y: 0 }, number: 4 },
       );
       break;
     case 5:
@@ -172,7 +189,7 @@ export function generateSampleDots(gridSize: number): Dot[] {
         { position: { x: 2, y: 1 }, number: 2 },
         { position: { x: 1, y: 4 }, number: 3 },
         { position: { x: 4, y: 3 }, number: 4 },
-        { position: { x: 3, y: 2 }, number: 5 }
+        { position: { x: 3, y: 2 }, number: 5 },
       );
       break;
     case 6:
@@ -182,14 +199,14 @@ export function generateSampleDots(gridSize: number): Dot[] {
         { position: { x: 1, y: 3 }, number: 3 },
         { position: { x: 4, y: 2 }, number: 4 },
         { position: { x: 3, y: 5 }, number: 5 },
-        { position: { x: 5, y: 4 }, number: 6 }
+        { position: { x: 5, y: 4 }, number: 6 },
       );
       break;
     default:
       // Fallback for other sizes
       dots.push(
         { position: { x: 0, y: 0 }, number: 1 },
-        { position: { x: gridSize - 1, y: gridSize - 1 }, number: 2 }
+        { position: { x: gridSize - 1, y: gridSize - 1 }, number: 2 },
       );
   }
 

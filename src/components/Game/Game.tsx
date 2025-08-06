@@ -9,6 +9,7 @@ export interface GameState {
   gridSize: number;
   startTime: number | null;
   endTime: number | null;
+  gameResetCounter: number;
 }
 
 const Game: React.FC = () => {
@@ -18,6 +19,7 @@ const Game: React.FC = () => {
     gridSize: 4,
     startTime: null,
     endTime: null,
+    gameResetCounter: 0,
   });
 
   const handleGameStart = useCallback(() => {
@@ -46,6 +48,7 @@ const Game: React.FC = () => {
       isComplete: false,
       startTime: null,
       endTime: null,
+      gameResetCounter: prev.gameResetCounter + 1,
     }));
   }, []);
 
@@ -57,6 +60,7 @@ const Game: React.FC = () => {
       isComplete: false,
       startTime: null,
       endTime: null,
+      gameResetCounter: prev.gameResetCounter + 1,
     }));
   }, []);
 
@@ -109,7 +113,7 @@ const Game: React.FC = () => {
           onGameStart={handleGameStart}
           onGameComplete={handleGameComplete}
           isComplete={gameState.isComplete}
-          key={`${gameState.gridSize}-${gameState.startTime || "new"}`} // Force re-render on new game
+          key={`${gameState.gridSize}-${gameState.gameResetCounter}`} // Force re-render on new game
         />
       </main>
     </div>
