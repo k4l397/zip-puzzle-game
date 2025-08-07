@@ -480,6 +480,7 @@ const Grid: React.FC<GridProps> = ({
         ref={canvasRef}
         className={`game-canvas ${disabled ? 'disabled' : ''}`}
         style={{ width: `${width}px`, height: `${height}px` }}
+        tabIndex={0}
         onMouseDown={handleMouseDown}
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
