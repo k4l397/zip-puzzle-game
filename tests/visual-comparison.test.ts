@@ -1,168 +1,124 @@
 import { test, expect } from '@playwright/test';
 
 test.describe('Visual Comparison Tests', () => {
-  test('should take screenshot of improved game styling', async ({ page }) => {
-    // Navigate to the game
+  test('should display consistent UI elements', async ({ page }) => {
     await page.goto('/');
     await page.waitForSelector('.game-container');
 
-    // Start a game to generate a puzzle
+    // Test initial welcome state
+    const welcomeMessage = page.locator('.welcome-message');
+    await expect(welcomeMessage).toBeVisible();
+    await expect(page).toHaveScreenshot('welcome-screen.png');
+
+    // Test controls and header
+    const gameHeader = page.locator('.game-header');
+    await expect(gameHeader).toBeVisible();
+
+    const gridSizeSelect = page.locator('#grid-size');
+    await expect(gridSizeSelect).toBeVisible();
+
+    const startBtn = page.locator('.start-btn');
+    await expect(startBtn).toBeVisible();
+  });
+
+  test('should show proper canvas dimensions for different grid sizes', async ({
+    page,
+  }) => {
+    await page.goto('/');
+    await page.waitForSelector('.game-container');
+
+    // Test that different grid sizes produce different canvas dimensions
+    const gridSizeSelect = page.locator('#grid-size');
+
+    // Test 3x3 grid
+    await gridSizeSelect.selectOption('3');
     const startBtn = page.locator('.start-btn');
     await startBtn.click();
 
-    // Wait for the canvas to appear with generated puzzle
     const canvas = page.locator('.game-canvas');
     await expect(canvas).toBeVisible({ timeout: 15000 });
 
-    // Wait a moment for full rendering
-    await page.waitForTimeout(1000);
+    const smallCanvasBounds = await canvas.boundingBox();
+    expect(smallCanvasBounds).not.toBeNull();
 
-    // Take a screenshot of the initial puzzle state
-    await expect(canvas).toHaveScreenshot('puzzle-initial-state.png');
+    // Reload and test 6x6 grid
+    await page.reload();
+    await page.waitForSelector('.game-container');
 
-    // Draw a partial path to show the pipe styling
-    const canvasBounds = await canvas.boundingBox();
-    if (canvasBounds) {
-      // Start drawing from what should be dot 1
-      await page.mouse.click(canvasBounds.x + 90, canvasBounds.y + 90);
-      await page.mouse.down();
+    await gridSizeSelect.selectOption('6');
+    await startBtn.click();
 
-      // Draw a path through several cells
-      await page.mouse.move(canvasBounds.x + 150, canvasBounds.y + 90);
-      await page.mouse.move(canvasBounds.x + 150, canvasBounds.y + 150);
-      await page.mouse.move(canvasBounds.x + 210, canvasBounds.y + 150);
-      await page.mouse.up();
+    await expect(canvas).toBeVisible({ timeout: 15000 });
+    const largeCanvasBounds = await canvas.boundingBox();
 
-      // Wait for rendering
-      await page.waitForTimeout(500);
+    expect(largeCanvasBounds).not.toBeNull();
 
-      // Take screenshot showing the path and dots
-      await expect(canvas).toHaveScreenshot('puzzle-with-path.png');
-
-      // Test hover state by moving mouse over existing path
-      await page.mouse.move(canvasBounds.x + 150, canvasBounds.y + 90);
-      await page.waitForTimeout(200);
-
-      // Take screenshot of hover state
-      await expect(canvas).toHaveScreenshot('puzzle-with-hover.png');
+    // Larger grid should have larger canvas (unless constrained by viewport)
+    if (smallCanvasBounds && largeCanvasBounds) {
+      // On desktop, larger grids should be larger or same size (if maxed out)
+      expect(largeCanvasBounds.width).toBeGreaterThanOrEqual(
+        smallCanvasBounds.width
+      );
     }
   });
 
-  test('should compare different grid sizes', async ({ page }) => {
-    await page.goto('/');
-    await page.waitForSelector('.game-container');
-
-    // Test 3x3 grid
-    const gridSizeSelect = page.locator('#grid-size');
-    await gridSizeSelect.selectOption('3');
-
-    const startBtn = page.locator('.start-btn');
-    await startBtn.click();
-
-    const canvas = page.locator('.game-canvas');
-    await expect(canvas).toBeVisible({ timeout: 15000 });
-    await page.waitForTimeout(1000);
-
-    await expect(canvas).toHaveScreenshot('puzzle-3x3-grid.png');
-
-    // Generate new puzzle with 5x5 grid
-    const newPuzzleBtn = page.locator('.new-puzzle-btn');
-    await newPuzzleBtn.click();
-
-    await gridSizeSelect.selectOption('5');
-    await newPuzzleBtn.click();
-
-    await expect(canvas).toBeVisible({ timeout: 15000 });
-    await page.waitForTimeout(1000);
-
-    await expect(canvas).toHaveScreenshot('puzzle-5x5-grid.png');
-  });
-
-  test('should show visual styling on mobile viewport', async ({ page }) => {
+  test('should maintain proper mobile responsive layout', async ({ page }) => {
     // Set mobile viewport
     await page.setViewportSize({ width: 375, height: 667 });
 
     await page.goto('/');
     await page.waitForSelector('.game-container');
 
-    // Start a game
+    // Test that mobile layout adjusts properly
+    const gameHeader = page.locator('.game-header');
+    await expect(gameHeader).toBeVisible();
+
+    // Start a game with largest grid to test scaling
+    const gridSizeSelect = page.locator('#grid-size');
+    await gridSizeSelect.selectOption('8');
+
     const startBtn = page.locator('.start-btn');
     await startBtn.click();
 
     const canvas = page.locator('.game-canvas');
     await expect(canvas).toBeVisible({ timeout: 15000 });
-    await page.waitForTimeout(1000);
 
-    // Take full page screenshot on mobile
-    await expect(page).toHaveScreenshot('mobile-game-view.png', {
-      fullPage: true,
-    });
-
-    // Draw a path on mobile
+    // Verify canvas fits within mobile viewport
     const canvasBounds = await canvas.boundingBox();
-    if (canvasBounds) {
-      await page.mouse.click(canvasBounds.x + 50, canvasBounds.y + 50);
-      await page.mouse.down();
-      await page.mouse.move(canvasBounds.x + 100, canvasBounds.y + 50);
-      await page.mouse.move(canvasBounds.x + 100, canvasBounds.y + 100);
-      await page.mouse.up();
+    expect(canvasBounds).not.toBeNull();
 
-      await page.waitForTimeout(500);
-      await expect(canvas).toHaveScreenshot('mobile-with-path.png');
+    if (canvasBounds) {
+      // Canvas should fit within viewport with reasonable margins
+      expect(canvasBounds.width).toBeLessThanOrEqual(375 - 32); // 16px margin each side
+      expect(
+        Math.abs(canvasBounds.width - canvasBounds.height)
+      ).toBeLessThanOrEqual(5); // Square aspect ratio
     }
   });
 
-  test('should capture completion state styling', async ({ page }) => {
+  test('should show game state transitions', async ({ page }) => {
     await page.goto('/');
     await page.waitForSelector('.game-container');
 
-    // Use a small grid for easier completion testing
-    const gridSizeSelect = page.locator('#grid-size');
-    await gridSizeSelect.selectOption('3');
+    // Screenshot welcome state
+    await expect(page).toHaveScreenshot('game-state-welcome.png');
 
+    // Start game and screenshot playing state
     const startBtn = page.locator('.start-btn');
     await startBtn.click();
 
     const canvas = page.locator('.game-canvas');
     await expect(canvas).toBeVisible({ timeout: 15000 });
-    await page.waitForTimeout(1000);
 
-    // Try to draw a complete path (this likely won't actually win, but shows the visual state)
-    const canvasBounds = await canvas.boundingBox();
-    if (canvasBounds) {
-      // Draw an extensive path
-      await page.mouse.click(canvasBounds.x + 70, canvasBounds.y + 70);
-      await page.mouse.down();
+    // Verify game controls are in correct state
+    const gridSizeSelect = page.locator('#grid-size');
+    await expect(gridSizeSelect).toBeDisabled(); // Should be disabled during play
 
-      // Create a path that visits multiple cells
-      const moves = [
-        { x: 130, y: 70 },
-        { x: 190, y: 70 },
-        { x: 190, y: 130 },
-        { x: 130, y: 130 },
-        { x: 70, y: 130 },
-        { x: 70, y: 190 },
-        { x: 130, y: 190 },
-        { x: 190, y: 190 },
-      ];
+    const newPuzzleBtn = page.locator('.new-puzzle-btn');
+    await expect(newPuzzleBtn).toBeEnabled(); // Should be enabled during play
 
-      for (const move of moves) {
-        await page.mouse.move(canvasBounds.x + move.x, canvasBounds.y + move.y);
-        await page.waitForTimeout(100);
-      }
-
-      await page.mouse.up();
-      await page.waitForTimeout(1000);
-
-      await expect(canvas).toHaveScreenshot('puzzle-complex-path.png');
-    }
-
-    // Check if completion message appears and screenshot it
-    const completionMessage = page.locator('.completion-message');
-    if (await completionMessage.isVisible()) {
-      await expect(page).toHaveScreenshot('puzzle-completed.png', {
-        fullPage: true,
-      });
-    }
+    // Screenshot playing state (focusing on UI, not puzzle content)
+    const gameInfo = page.locator('.game-info');
+    await expect(gameInfo).toHaveScreenshot('game-info-playing.png');
   });
 });

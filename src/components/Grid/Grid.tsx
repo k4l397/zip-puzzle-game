@@ -30,9 +30,19 @@ const Grid: React.FC<GridProps> = ({
   const [hoveredPosition, setHoveredPosition] = useState<Position | null>(null);
 
   const getCanvasSize = useCallback(() => {
-    const totalSize =
+    const baseTotalSize =
       puzzle.gridSize * GAME_CONFIG.cellSize + CANVAS_CONFIG.padding * 2;
-    return { width: totalSize, height: totalSize };
+
+    // Calculate maximum size that fits in viewport with margins
+    const viewportWidth = window.innerWidth;
+    const viewportHeight = window.innerHeight;
+    const maxWidth = Math.min(viewportWidth - 32, baseTotalSize); // 16px margin on each side
+    const maxHeight = Math.min(viewportHeight - 200, baseTotalSize); // Reserve space for header/controls
+
+    // Use the smaller dimension to maintain square aspect ratio
+    const actualSize = Math.min(maxWidth, maxHeight, baseTotalSize);
+
+    return { width: actualSize, height: actualSize };
   }, [puzzle.gridSize]);
 
   const getGridPosition = useCallback(
@@ -41,16 +51,30 @@ const Grid: React.FC<GridProps> = ({
       if (!canvas) return null;
 
       const rect = canvas.getBoundingClientRect();
-      const canvasX = x - rect.left;
-      const canvasY = y - rect.top;
+      const { width: actualSize } = getCanvasSize();
+
+      // Calculate the scale factor between displayed size and actual canvas size
+      const scaleX = actualSize / rect.width;
+      const scaleY = actualSize / rect.height;
+
+      const canvasX = (x - rect.left) * scaleX;
+      const canvasY = (y - rect.top) * scaleY;
+
+      // Calculate scaled padding and cell size
+      const scaledPadding =
+        (CANVAS_CONFIG.padding * actualSize) /
+        (puzzle.gridSize * GAME_CONFIG.cellSize + CANVAS_CONFIG.padding * 2);
+      const scaledCellSize =
+        (GAME_CONFIG.cellSize * actualSize) /
+        (puzzle.gridSize * GAME_CONFIG.cellSize + CANVAS_CONFIG.padding * 2);
 
       // Adjust for padding
-      const gridX = canvasX - CANVAS_CONFIG.padding;
-      const gridY = canvasY - CANVAS_CONFIG.padding;
+      const gridX = canvasX - scaledPadding;
+      const gridY = canvasY - scaledPadding;
 
       // Convert to grid coordinates
-      const cellX = Math.floor(gridX / GAME_CONFIG.cellSize);
-      const cellY = Math.floor(gridY / GAME_CONFIG.cellSize);
+      const cellX = Math.floor(gridX / scaledCellSize);
+      const cellY = Math.floor(gridY / scaledCellSize);
 
       // Check bounds
       if (
@@ -64,21 +88,28 @@ const Grid: React.FC<GridProps> = ({
 
       return { x: cellX, y: cellY };
     },
-    [puzzle.gridSize]
+    [puzzle.gridSize, getCanvasSize]
   );
 
-  const getCanvasPosition = useCallback((gridPos: Position): Position => {
-    return {
-      x:
-        gridPos.x * GAME_CONFIG.cellSize +
-        CANVAS_CONFIG.padding +
-        GAME_CONFIG.cellSize / 2,
-      y:
-        gridPos.y * GAME_CONFIG.cellSize +
-        CANVAS_CONFIG.padding +
-        GAME_CONFIG.cellSize / 2,
-    };
-  }, []);
+  const getCanvasPosition = useCallback(
+    (gridPos: Position): Position => {
+      const { width: actualSize } = getCanvasSize();
+
+      // Calculate scaled padding and cell size based on actual canvas dimensions
+      const scaledPadding =
+        (CANVAS_CONFIG.padding * actualSize) /
+        (puzzle.gridSize * GAME_CONFIG.cellSize + CANVAS_CONFIG.padding * 2);
+      const scaledCellSize =
+        (GAME_CONFIG.cellSize * actualSize) /
+        (puzzle.gridSize * GAME_CONFIG.cellSize + CANVAS_CONFIG.padding * 2);
+
+      return {
+        x: gridPos.x * scaledCellSize + scaledPadding + scaledCellSize / 2,
+        y: gridPos.y * scaledCellSize + scaledPadding + scaledCellSize / 2,
+      };
+    },
+    [getCanvasSize, puzzle.gridSize]
+  );
 
   const isValidMove = useCallback(
     (from: Position, to: Position): boolean => {
@@ -96,23 +127,39 @@ const Grid: React.FC<GridProps> = ({
 
       // Set grid style
       ctx.strokeStyle = GAME_CONFIG.colors.grid;
-      ctx.lineWidth = CANVAS_CONFIG.gridLineWidth;
+
+      // Calculate scaled dimensions
+      const scaledPadding =
+        (CANVAS_CONFIG.padding * width) /
+        (puzzle.gridSize * GAME_CONFIG.cellSize + CANVAS_CONFIG.padding * 2);
+      const scaledCellSize =
+        (GAME_CONFIG.cellSize * width) /
+        (puzzle.gridSize * GAME_CONFIG.cellSize + CANVAS_CONFIG.padding * 2);
+      const scaledLineWidth = Math.max(
+        1,
+        CANVAS_CONFIG.gridLineWidth *
+          (width /
+            (puzzle.gridSize * GAME_CONFIG.cellSize +
+              CANVAS_CONFIG.padding * 2))
+      );
+
+      ctx.lineWidth = scaledLineWidth;
 
       // Draw vertical lines
       for (let i = 0; i <= puzzle.gridSize; i++) {
-        const x = i * GAME_CONFIG.cellSize + CANVAS_CONFIG.padding;
+        const x = i * scaledCellSize + scaledPadding;
         ctx.beginPath();
-        ctx.moveTo(x, CANVAS_CONFIG.padding);
-        ctx.lineTo(x, height - CANVAS_CONFIG.padding);
+        ctx.moveTo(x, scaledPadding);
+        ctx.lineTo(x, height - scaledPadding);
         ctx.stroke();
       }
 
       // Draw horizontal lines
       for (let i = 0; i <= puzzle.gridSize; i++) {
-        const y = i * GAME_CONFIG.cellSize + CANVAS_CONFIG.padding;
+        const y = i * scaledCellSize + scaledPadding;
         ctx.beginPath();
-        ctx.moveTo(CANVAS_CONFIG.padding, y);
-        ctx.lineTo(width - CANVAS_CONFIG.padding, y);
+        ctx.moveTo(scaledPadding, y);
+        ctx.lineTo(width - scaledPadding, y);
         ctx.stroke();
       }
     },
@@ -123,8 +170,13 @@ const Grid: React.FC<GridProps> = ({
     (ctx: CanvasRenderingContext2D, path: Position[]) => {
       if (path.length < 1) return;
 
+      const { width: canvasWidth } = getCanvasSize();
+      const scaledPipeWidth =
+        (GAME_CONFIG.pipeWidth * canvasWidth) /
+        (puzzle.gridSize * GAME_CONFIG.cellSize + CANVAS_CONFIG.padding * 2);
+
       ctx.strokeStyle = GAME_CONFIG.colors.pipe;
-      ctx.lineWidth = GAME_CONFIG.pipeWidth;
+      ctx.lineWidth = scaledPipeWidth;
       ctx.lineCap = 'round';
       ctx.lineJoin = 'round';
 
@@ -150,7 +202,7 @@ const Grid: React.FC<GridProps> = ({
         // Regular path circle - smaller than before to let pipe thickness show
         ctx.fillStyle = GAME_CONFIG.colors.pipe;
         ctx.beginPath();
-        ctx.arc(pos.x, pos.y, GAME_CONFIG.pipeWidth / 6, 0, 2 * Math.PI);
+        ctx.arc(pos.x, pos.y, scaledPipeWidth / 6, 0, 2 * Math.PI);
         ctx.fill();
 
         // Add hover highlight
@@ -160,44 +212,57 @@ const Grid: React.FC<GridProps> = ({
           hoveredPosition.y === position.y
         ) {
           ctx.strokeStyle = GAME_CONFIG.colors.success;
-          ctx.lineWidth = 3;
+          ctx.lineWidth = Math.max(2, scaledPipeWidth / 8);
           ctx.beginPath();
-          ctx.arc(pos.x, pos.y, GAME_CONFIG.pipeWidth / 2 + 2, 0, 2 * Math.PI);
+          ctx.arc(pos.x, pos.y, scaledPipeWidth / 2 + 2, 0, 2 * Math.PI);
           ctx.stroke();
         }
       }
     },
-    [getCanvasPosition, hoveredPosition]
+    [getCanvasPosition, hoveredPosition, getCanvasSize, puzzle.gridSize]
   );
 
   const drawDots = useCallback(
     (ctx: CanvasRenderingContext2D) => {
+      const { width: canvasWidth } = getCanvasSize();
+      const scaleFactor =
+        canvasWidth /
+        (puzzle.gridSize * GAME_CONFIG.cellSize + CANVAS_CONFIG.padding * 2);
+      const scaledDotRadius = GAME_CONFIG.dotRadius * scaleFactor;
+      const scaledFontSize = Math.max(12, 18 * scaleFactor);
+
       puzzle.dots.forEach(dot => {
         const pos = getCanvasPosition(dot.position);
 
         // Draw outer white circle for better contrast
         ctx.fillStyle = 'white';
         ctx.beginPath();
-        ctx.arc(pos.x, pos.y, GAME_CONFIG.dotRadius + 2, 0, 2 * Math.PI);
+        ctx.arc(
+          pos.x,
+          pos.y,
+          scaledDotRadius + 2 * scaleFactor,
+          0,
+          2 * Math.PI
+        );
         ctx.fill();
 
         // Draw main dot circle
         ctx.fillStyle = GAME_CONFIG.colors.dot;
         ctx.beginPath();
-        ctx.arc(pos.x, pos.y, GAME_CONFIG.dotRadius, 0, 2 * Math.PI);
+        ctx.arc(pos.x, pos.y, scaledDotRadius, 0, 2 * Math.PI);
         ctx.fill();
 
         // Draw dot number with better contrast
         ctx.fillStyle = GAME_CONFIG.colors.dotText;
-        ctx.font = 'bold 18px -apple-system, BlinkMacSystemFont, sans-serif';
+        ctx.font = `bold ${scaledFontSize}px -apple-system, BlinkMacSystemFont, sans-serif`;
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
 
         // Add text shadow for better readability
         ctx.shadowColor = 'rgba(0, 0, 0, 0.5)';
-        ctx.shadowBlur = 2;
-        ctx.shadowOffsetX = 1;
-        ctx.shadowOffsetY = 1;
+        ctx.shadowBlur = 2 * scaleFactor;
+        ctx.shadowOffsetX = 1 * scaleFactor;
+        ctx.shadowOffsetY = 1 * scaleFactor;
 
         ctx.fillText(dot.number.toString(), pos.x, pos.y);
 
@@ -208,7 +273,7 @@ const Grid: React.FC<GridProps> = ({
         ctx.shadowOffsetY = 0;
       });
     },
-    [puzzle.dots, getCanvasPosition]
+    [puzzle.dots, getCanvasPosition, getCanvasSize, puzzle.gridSize]
   );
 
   const render = useCallback(() => {
@@ -415,6 +480,7 @@ const Grid: React.FC<GridProps> = ({
         ref={canvasRef}
         className={`game-canvas ${disabled ? 'disabled' : ''}`}
         style={{ width: `${width}px`, height: `${height}px` }}
+        tabIndex={0}
         onMouseDown={handleMouseDown}
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
