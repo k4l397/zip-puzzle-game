@@ -175,23 +175,35 @@ const Grid: React.FC<GridProps> = ({
         (GAME_CONFIG.pipeWidth * canvasWidth) /
         (puzzle.gridSize * GAME_CONFIG.cellSize + CANVAS_CONFIG.padding * 2);
 
-      ctx.strokeStyle = GAME_CONFIG.colors.pipe;
+      // Enhanced backtracking visualization will be handled per-segment
+
       ctx.lineWidth = scaledPipeWidth;
       ctx.lineCap = 'round';
       ctx.lineJoin = 'round';
 
-      // Draw path segments
+      // Draw path segments with different colors based on backtrackability
       if (path.length > 1) {
-        ctx.beginPath();
-        const startPos = getCanvasPosition(path[0]);
-        ctx.moveTo(startPos.x, startPos.y);
+        const currentPos = path[path.length - 1];
 
         for (let i = 1; i < path.length; i++) {
-          const pos = getCanvasPosition(path[i]);
-          ctx.lineTo(pos.x, pos.y);
-        }
+          const fromPos = getCanvasPosition(path[i - 1]);
+          const toPos = getCanvasPosition(path[i]);
 
-        ctx.stroke();
+          // Determine if this segment can be backtracked to using current position context
+          const canBacktrack = validator.canBacktrackToPosition(
+            path,
+            path[i],
+            currentPos
+          );
+          ctx.strokeStyle = canBacktrack
+            ? GAME_CONFIG.colors.pipe
+            : 'rgba(100, 100, 100, 0.6)'; // Dimmed color for non-backtrackable
+
+          ctx.beginPath();
+          ctx.moveTo(fromPos.x, fromPos.y);
+          ctx.lineTo(toPos.x, toPos.y);
+          ctx.stroke();
+        }
       }
 
       // Draw filled circles at each path position for better visibility and interaction
@@ -199,17 +211,28 @@ const Grid: React.FC<GridProps> = ({
         const position = path[i];
         const pos = getCanvasPosition(position);
 
-        // Regular path circle - smaller than before to let pipe thickness show
-        ctx.fillStyle = GAME_CONFIG.colors.pipe;
+        // Determine if this position can be backtracked to
+        const currentPos = path[path.length - 1];
+        const canBacktrack = validator.canBacktrackToPosition(
+          path,
+          position,
+          currentPos
+        );
+
+        // Regular path circle with appropriate color
+        ctx.fillStyle = canBacktrack
+          ? GAME_CONFIG.colors.pipe
+          : 'rgba(100, 100, 100, 0.6)';
         ctx.beginPath();
         ctx.arc(pos.x, pos.y, scaledPipeWidth / 6, 0, 2 * Math.PI);
         ctx.fill();
 
-        // Add hover highlight
+        // Add hover highlight only for backtrackable positions
         if (
           hoveredPosition &&
           hoveredPosition.x === position.x &&
-          hoveredPosition.y === position.y
+          hoveredPosition.y === position.y &&
+          canBacktrack
         ) {
           ctx.strokeStyle = GAME_CONFIG.colors.success;
           ctx.lineWidth = Math.max(2, scaledPipeWidth / 8);
@@ -219,7 +242,13 @@ const Grid: React.FC<GridProps> = ({
         }
       }
     },
-    [getCanvasPosition, hoveredPosition, getCanvasSize, puzzle.gridSize]
+    [
+      getCanvasPosition,
+      hoveredPosition,
+      getCanvasSize,
+      puzzle.gridSize,
+      validator,
+    ]
   );
 
   const drawDots = useCallback(
@@ -316,15 +345,22 @@ const Grid: React.FC<GridProps> = ({
         );
 
         if (pathIndex !== -1) {
-          // Resume from this point in the path
-          const resumePath = currentPath.slice(0, pathIndex + 1);
-          setDragState({
-            isDragging: true,
-            startPosition: position,
-            currentPosition: position,
-            path: resumePath,
-          });
-          onPathUpdate(resumePath);
+          // Check if we can resume from this position using enhanced rules
+          const currentPos = currentPath[currentPath.length - 1];
+          if (
+            validator.canBacktrackToPosition(currentPath, position, currentPos)
+          ) {
+            // Resume from this point in the path (allowed)
+            const resumePath = currentPath.slice(0, pathIndex + 1);
+            setDragState({
+              isDragging: true,
+              startPosition: position,
+              currentPosition: position,
+              path: resumePath,
+            });
+            onPathUpdate(resumePath);
+          }
+          // If resuming not allowed, ignore the click
         }
       }
     },
@@ -336,12 +372,16 @@ const Grid: React.FC<GridProps> = ({
       const position = getGridPosition(event.clientX, event.clientY);
 
       if (!dragState.isDragging) {
-        // Update hover state for resumable positions
+        // Update hover state for resumable positions (respecting enhanced backtracking)
         if (position && currentPath.length > 0) {
           const isOnPath = currentPath.some(
             pathPos => pathPos.x === position.x && pathPos.y === position.y
           );
-          setHoveredPosition(isOnPath ? position : null);
+          const currentPos = currentPath[currentPath.length - 1];
+          const canBacktrack =
+            isOnPath &&
+            validator.canBacktrackToPosition(currentPath, position, currentPos);
+          setHoveredPosition(canBacktrack ? position : null);
         } else {
           setHoveredPosition(null);
         }
@@ -358,19 +398,30 @@ const Grid: React.FC<GridProps> = ({
       // Check if it's a valid move (adjacent cells only)
       if (!isValidMove(lastPosition, position)) return;
 
-      // Check if we're going backwards (allow undo)
+      // Check if we're going backwards (enhanced backtracking)
       const pathIndex = dragState.path.findIndex(
         p => p.x === position.x && p.y === position.y
       );
       if (pathIndex !== -1) {
-        // Going backwards - trim path
-        const newPath = dragState.path.slice(0, pathIndex + 1);
-        setDragState(prev => ({
-          ...prev,
-          currentPosition: position,
-          path: newPath,
-        }));
-        onPathUpdate(newPath);
+        // Check if we can backtrack to this position using enhanced rules
+        if (
+          validator.canBacktrackToPosition(
+            dragState.path,
+            position,
+            lastPosition
+          )
+        ) {
+          // Going backwards - trim path (allowed)
+          const newPath = dragState.path.slice(0, pathIndex + 1);
+          setDragState(prev => ({
+            ...prev,
+            currentPosition: position,
+            path: newPath,
+          }));
+          onPathUpdate(newPath);
+        }
+        // If backtracking not allowed, ignore the move (don't update path)
+        return;
       } else {
         // Going forward - add to path
         const newPath = [...dragState.path, position];

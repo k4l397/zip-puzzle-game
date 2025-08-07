@@ -316,6 +316,109 @@ export class PathValidator {
 
     return count;
   }
+
+  /**
+   * Finds the last numbered dot that was visited in the given path
+   * Returns both the dot and the index where it was reached
+   */
+  public getLastVisitedDot(path: Position[]): {
+    dot: Dot | null;
+    index: number;
+  } {
+    if (path.length === 0) {
+      return { dot: null, index: -1 };
+    }
+
+    const sortedDots = [...this.puzzle.dots].sort(
+      (a, b) => a.number - b.number
+    );
+    let lastDot: Dot | null = null;
+    let lastIndex = -1;
+
+    for (const dot of sortedDots) {
+      const dotIndex = path.findIndex(
+        pos => pos.x === dot.position.x && pos.y === dot.position.y
+      );
+
+      if (dotIndex !== -1 && dotIndex > lastIndex) {
+        lastDot = dot;
+        lastIndex = dotIndex;
+      } else if (dotIndex === -1) {
+        // Stop at first unreached dot in sequence
+        break;
+      }
+    }
+
+    return { dot: lastDot, index: lastIndex };
+  }
+
+  /**
+   * Determines if a position can be backtracked to based on enhanced backtracking rules
+   * - If currently at a numbered dot: can backtrack to previous numbered dot (inclusive)
+   * - If not at a numbered dot: can only backtrack to positions after last numbered dot
+   */
+  public canBacktrackToPosition(
+    path: Position[],
+    targetPosition: Position,
+    currentPosition?: Position
+  ): boolean {
+    const targetIndex = path.findIndex(
+      pos => pos.x === targetPosition.x && pos.y === targetPosition.y
+    );
+
+    if (targetIndex === -1) {
+      // Position not in path, no backtracking possible
+      return false;
+    }
+
+    // Use the last position in path if no current position specified
+    const currentPos = currentPosition || path[path.length - 1];
+
+    // Check if current position is on a numbered dot
+    const currentDot = this.puzzle.dots.find(
+      dot => dot.position.x === currentPos.x && dot.position.y === currentPos.y
+    );
+
+    if (currentDot) {
+      // Currently at a numbered dot - can backtrack to previous numbered dot
+      const previousDot = this.getPreviousNumberedDot(currentDot.number);
+      if (previousDot) {
+        const previousDotIndex = path.findIndex(
+          pos =>
+            pos.x === previousDot.position.x && pos.y === previousDot.position.y
+        );
+        // Allow backtracking to any position from previous dot onwards
+        return targetIndex >= previousDotIndex;
+      } else {
+        // At dot 1, can backtrack to beginning
+        return true;
+      }
+    } else {
+      // Not at a numbered dot - use original logic
+      const { index: lastDotIndex } = this.getLastVisitedDot(path);
+
+      // If no numbered dots have been reached yet, allow backtracking to any position
+      if (lastDotIndex === -1) {
+        return true;
+      }
+
+      // Only allow backtracking to positions that came after the last numbered dot (inclusive)
+      return targetIndex >= lastDotIndex;
+    }
+  }
+
+  /**
+   * Gets the previous numbered dot in sequence
+   */
+  private getPreviousNumberedDot(currentDotNumber: number): Dot | null {
+    if (currentDotNumber <= 1) {
+      return null; // No previous dot for dot 1
+    }
+
+    return (
+      this.puzzle.dots.find(dot => dot.number === currentDotNumber - 1) || null
+    );
+  }
 }
 
 /**
