@@ -8,7 +8,9 @@
 .game-canvas {
   border: 2px solid #e5e7eb;
   border-radius: 0.5rem;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  box-shadow:
+    0 4px 6px -1px rgba(0, 0, 0, 0.1),
+    0 2px 4px -1px rgba(0, 0, 0, 0.06);
   background-color: white;
   cursor: crosshair;
   touch-action: none;
@@ -25,20 +27,15 @@
 }
 
 .game-canvas:hover:not(.disabled) {
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  box-shadow:
+    0 10px 15px -3px rgba(0, 0, 0, 0.1),
+    0 4px 6px -2px rgba(0, 0, 0, 0.05);
 }
 
 /* Mobile optimizations */
 @media (max-width: 768px) {
   .grid-container {
     padding: 0.5rem;
-  }
-
-  .game-canvas {
-    max-width: calc(100vw - 2rem);
-    max-height: calc(100vh - 200px);
-    width: auto;
-    height: auto;
   }
 }
 
@@ -48,7 +45,6 @@
   }
 
   .game-canvas {
-    max-width: calc(100vw - 1rem);
     border-width: 1px;
   }
 }
@@ -71,7 +67,9 @@
   }
 
   .game-canvas:hover:not(.disabled) {
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    box-shadow:
+      0 4px 6px -1px rgba(0, 0, 0, 0.1),
+      0 2px 4px -1px rgba(0, 0, 0, 0.06);
   }
 }
 

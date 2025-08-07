@@ -195,7 +195,7 @@ test.describe('Zip Puzzle Game - Basic Functionality', () => {
     await gridSizeSelect.selectOption('6');
 
     await newPuzzleBtn.click();
-    const canvas = page.locator('.game-canvas');
+    canvas = page.locator('.game-canvas');
     await expect(canvas).toBeVisible({ timeout: 15000 }); // Larger grids take longer
   });
 
