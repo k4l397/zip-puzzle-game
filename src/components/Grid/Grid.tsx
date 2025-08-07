@@ -181,10 +181,8 @@ const Grid: React.FC<GridProps> = ({
       ctx.lineCap = 'round';
       ctx.lineJoin = 'round';
 
-      // Draw path segments with different colors based on backtrackability
+      // Draw path segments
       if (path.length > 1) {
-        const currentPos = path[path.length - 1];
-
         ctx.strokeStyle = GAME_CONFIG.colors.pipe;
 
         for (let i = 1; i < path.length; i++) {
@@ -353,7 +351,14 @@ const Grid: React.FC<GridProps> = ({
         }
       }
     },
-    [disabled, getGridPosition, puzzle.dots, currentPath, onPathUpdate]
+    [
+      disabled,
+      getGridPosition,
+      puzzle.dots,
+      currentPath,
+      onPathUpdate,
+      validator,
+    ]
   );
 
   const handleMouseMove = useCallback(
@@ -429,6 +434,7 @@ const Grid: React.FC<GridProps> = ({
       isValidMove,
       onPathUpdate,
       currentPath,
+      validator,
     ]
   );
 
