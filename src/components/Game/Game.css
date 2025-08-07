@@ -3,7 +3,8 @@
   display: flex;
   flex-direction: column;
   background-color: var(--bg-color, #f8fafc);
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+  font-family:
+    -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
 }
 
 .game-header {
@@ -55,7 +56,8 @@
 }
 
 .new-puzzle-btn,
-.start-btn {
+.start-btn,
+.reset-btn {
   padding: 0.75rem 1.5rem;
   background-color: #2563eb;
   color: white;
@@ -67,13 +69,23 @@
 }
 
 .new-puzzle-btn:hover:not(:disabled),
-.start-btn:hover:not(:disabled) {
+.start-btn:hover:not(:disabled),
+.reset-btn:hover:not(:disabled) {
   background-color: #1d4ed8;
 }
 
-.new-puzzle-btn:disabled {
+.new-puzzle-btn:disabled,
+.reset-btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+}
+
+.reset-btn {
+  background-color: #dc2626;
+}
+
+.reset-btn:hover:not(:disabled) {
+  background-color: #b91c1c;
 }
 
 .game-content {
@@ -142,8 +154,12 @@
 }
 
 @keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
 .welcome-message {
@@ -200,7 +216,8 @@
   }
 
   .new-puzzle-btn,
-  .start-btn {
+  .start-btn,
+  .reset-btn {
     width: 100%;
     padding: 0.875rem;
   }

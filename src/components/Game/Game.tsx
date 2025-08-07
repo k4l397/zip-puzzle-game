@@ -123,6 +123,19 @@ const Game: React.FC = () => {
     setGameMode('completed');
   }, []);
 
+  const handleReset = useCallback(() => {
+    if (!gameState.puzzle) return;
+
+    setGameState(prevState => ({
+      ...prevState,
+      currentPath: [],
+      isCompleted: false,
+      startTime: null,
+      endTime: null,
+    }));
+    setGameMode('playing');
+  }, [gameState.puzzle]);
+
   const checkWinCondition = useCallback(
     (path: Position[]) => {
       if (!gameState.puzzle) return;
@@ -212,7 +225,7 @@ const Game: React.FC = () => {
               id="grid-size"
               value={gameState.gridSize}
               onChange={e => handleGridSizeChange(Number(e.target.value))}
-              disabled={gameMode === 'playing' || gameMode === 'generating'}
+              disabled={gameMode === 'generating'}
             >
               {Array.from(
                 {
@@ -233,6 +246,15 @@ const Game: React.FC = () => {
           >
             {gameMode === 'generating' ? 'Generating...' : 'New Puzzle'}
           </button>
+          {(gameMode === 'playing' || gameMode === 'completed') && (
+            <button
+              className="reset-btn"
+              onClick={handleReset}
+              disabled={gameMode === 'generating'}
+            >
+              Reset
+            </button>
+          )}
         </div>
       </header>
 

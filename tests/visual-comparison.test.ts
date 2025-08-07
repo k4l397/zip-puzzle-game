@@ -112,10 +112,15 @@ test.describe('Visual Comparison Tests', () => {
 
     // Verify game controls are in correct state
     const gridSizeSelect = page.locator('#grid-size');
-    await expect(gridSizeSelect).toBeDisabled(); // Should be disabled during play
+    await expect(gridSizeSelect).toBeEnabled(); // Should now be enabled during play for next puzzle
 
     const newPuzzleBtn = page.locator('.new-puzzle-btn');
     await expect(newPuzzleBtn).toBeEnabled(); // Should be enabled during play
+
+    // Reset button should be visible during play
+    const resetBtn = page.locator('.reset-btn');
+    await expect(resetBtn).toBeVisible();
+    await expect(resetBtn).toBeEnabled();
 
     // Screenshot playing state (focusing on UI, not puzzle content)
     const gameInfo = page.locator('.game-info');
