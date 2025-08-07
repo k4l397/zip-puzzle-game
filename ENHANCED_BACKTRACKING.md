@@ -49,11 +49,10 @@ When at dot 1, you can backtrack to any position (no restrictions).
 
 ## Visual Feedback
 
-The system provides visual cues to help users understand backtracking limitations:
+The system provides subtle visual cues to help users understand backtracking limitations:
 
-- **Bright colored path segments**: Can be backtracked to
-- **Dimmed/grayed path segments**: Cannot be backtracked to
 - **Hover effects**: Only appear on backtrackable positions
+- **Path segments**: Maintain consistent coloring regardless of backtrackability
 
 ## Examples
 
@@ -103,13 +102,13 @@ New system: Can only hit recent positions after dot 2
 - **Mouse/touch drawing**: Prevents unwanted backtracking during path drawing
 - **Click-to-resume**: Only allows resuming from valid backtrack positions
 - **Hover effects**: Shows visual feedback for available backtrack positions
-- **Visual rendering**: Dims non-backtrackable path segments
+- **Visual rendering**: Maintains consistent path appearance
 
 ## Benefits
 
 1. **Prevents accidental long backtracking** in large puzzles
 2. **Maintains intuitive checkpoint behavior** with numbered dots
-3. **Clear visual feedback** about what's possible
+3. **Subtle visual feedback** through hover interactions
 4. **Progressive backtracking** through numbered dot checkpoints
 5. **Preserves existing functionality** while adding intelligence
 
