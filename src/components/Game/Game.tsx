@@ -247,11 +247,7 @@ const Game: React.FC = () => {
             {gameMode === 'generating' ? 'Generating...' : 'New Puzzle'}
           </button>
           {(gameMode === 'playing' || gameMode === 'completed') && (
-            <button
-              className="reset-btn"
-              onClick={handleReset}
-              disabled={gameMode === 'generating'}
-            >
+            <button className="reset-btn" onClick={handleReset}>
               Reset
             </button>
           )}
