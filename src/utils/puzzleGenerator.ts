@@ -12,11 +12,12 @@ interface GenerationOptions {
   dotCount?: number;
   maxAttempts?: number;
   timeout?: number;
+  useOptimized?: boolean;
 }
 
 /**
- * Generates a valid Zip puzzle using backtracking algorithm
- * Creates a Hamiltonian path that visits every cell exactly once
+ * Optimized puzzle generator using Warnsdorff's rule for superior performance
+ * Falls back to original algorithm if needed for compatibility
  */
 export class PuzzleGenerator {
   private gridSize: number;
@@ -38,46 +39,126 @@ export class PuzzleGenerator {
   }
 
   /**
-   * Main generation function - attempts to create a valid puzzle
+   * Main generation function - uses optimized algorithm by default
    */
-  public async generatePuzzle(options: GenerationOptions): Promise<PuzzleGenerationResult> {
-    const maxAttempts = options.maxAttempts || 10;
+  public async generatePuzzle(
+    options: GenerationOptions
+  ): Promise<PuzzleGenerationResult> {
+    // Use optimized algorithm by default (can be disabled for testing)
+    if (options.useOptimized !== false) {
+      return this.generateOptimizedPuzzle(options);
+    }
+
+    // Fallback to original algorithm
+    return this.generateLegacyPuzzle(options);
+  }
+
+  /**
+   * Optimized generation using Warnsdorff's rule
+   */
+  private async generateOptimizedPuzzle(
+    options: GenerationOptions
+  ): Promise<PuzzleGenerationResult> {
+    const maxAttempts = Math.min(options.maxAttempts || 5, 10); // Fewer attempts needed
 
     for (let attempt = 1; attempt <= maxAttempts; attempt++) {
       try {
-        const puzzle = await this.attemptGeneration(options);
+        const puzzle = await this.attemptOptimizedGeneration(options);
         if (puzzle) {
           return { success: true, puzzle };
         }
       } catch (error) {
-        console.warn(`Puzzle generation attempt ${attempt} failed:`, error);
+        console.warn(`Optimized generation attempt ${attempt} failed:`, error);
       }
     }
 
     return {
       success: false,
       puzzle: null,
-      error: `Failed to generate valid puzzle after ${maxAttempts} attempts`,
+      error: `Failed to generate optimized puzzle after ${maxAttempts} attempts`,
     };
   }
 
   /**
-   * Single attempt at puzzle generation
+   * Legacy generation for fallback compatibility
    */
-  private async attemptGeneration(options: GenerationOptions): Promise<Puzzle | null> {
+  private async generateLegacyPuzzle(
+    options: GenerationOptions
+  ): Promise<PuzzleGenerationResult> {
+    const maxAttempts = options.maxAttempts || 10;
+
+    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+      try {
+        const puzzle = await this.attemptLegacyGeneration(options);
+        if (puzzle) {
+          return { success: true, puzzle };
+        }
+      } catch (error) {
+        console.warn(`Legacy generation attempt ${attempt} failed:`, error);
+      }
+    }
+
+    return {
+      success: false,
+      puzzle: null,
+      error: `Failed to generate legacy puzzle after ${maxAttempts} attempts`,
+    };
+  }
+
+  /**
+   * Optimized single generation attempt
+   */
+  private async attemptOptimizedGeneration(
+    options: GenerationOptions
+  ): Promise<Puzzle | null> {
+    this.reset();
+    this.startTime = Date.now();
+
+    // Use optimal starting position for Warnsdorff's algorithm
+    const startPosition = this.getOptimalStartPosition();
+
+    if (this.generateOptimizedHamiltonianPath(startPosition)) {
+      const dotCount =
+        options.dotCount ||
+        DEFAULT_DOTS_PER_GRID_SIZE[this.gridSize] ||
+        Math.floor(this.gridSize * 1.5);
+      const dots = this.selectDotPositions(dotCount);
+
+      if (this.validatePuzzle(dots)) {
+        return {
+          id: `optimized-puzzle-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+          gridSize: this.gridSize,
+          dots,
+          solutionPath: [...this.path],
+        };
+      }
+    }
+
+    return null;
+  }
+
+  /**
+   * Legacy single generation attempt (fallback)
+   */
+  private async attemptLegacyGeneration(
+    options: GenerationOptions
+  ): Promise<Puzzle | null> {
     this.reset();
     this.startTime = Date.now();
 
     // Start from a random corner or edge position for variety
     const startPosition = this.getRandomStartPosition();
 
-    if (this.generateHamiltonianPath(startPosition)) {
-      const dotCount = options.dotCount || DEFAULT_DOTS_PER_GRID_SIZE[this.gridSize] || Math.floor(this.gridSize * 1.5);
+    if (this.generateLegacyHamiltonianPath(startPosition)) {
+      const dotCount =
+        options.dotCount ||
+        DEFAULT_DOTS_PER_GRID_SIZE[this.gridSize] ||
+        Math.floor(this.gridSize * 1.5);
       const dots = this.selectDotPositions(dotCount);
 
       if (this.validatePuzzle(dots)) {
         return {
-          id: `puzzle-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+          id: `legacy-puzzle-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
           gridSize: this.gridSize,
           dots,
           solutionPath: [...this.path],
@@ -100,7 +181,22 @@ export class PuzzleGenerator {
   }
 
   /**
-   * Get a random starting position (prefer corners and edges for interesting puzzles)
+   * Get optimal starting position for Warnsdorff's algorithm
+   */
+  private getOptimalStartPosition(): Position {
+    const corners = [
+      { x: 0, y: 0 },
+      { x: 0, y: this.gridSize - 1 },
+      { x: this.gridSize - 1, y: 0 },
+      { x: this.gridSize - 1, y: this.gridSize - 1 },
+    ];
+
+    // Add small randomness to avoid identical puzzles
+    return corners[Math.floor(Math.random() * corners.length)];
+  }
+
+  /**
+   * Get a random starting position (for legacy algorithm)
    */
   private getRandomStartPosition(): Position {
     const positions: Position[] = [];
@@ -127,9 +223,46 @@ export class PuzzleGenerator {
   }
 
   /**
-   * Generate a Hamiltonian path using backtracking DFS
+   * Optimized Hamiltonian path generation using Warnsdorff's rule
    */
-  private generateHamiltonianPath(start: Position): boolean {
+  private generateOptimizedHamiltonianPath(start: Position): boolean {
+    if (this.isTimedOut()) return false;
+
+    const key = this.positionToKey(start);
+    if (this.visited.has(key)) return false;
+
+    // Mark as visited
+    this.visited.add(key);
+    this.path.push(start);
+    this.grid[start.y][start.x] = true;
+
+    // Success - visited all cells
+    if (this.path.length === this.gridSize * this.gridSize) {
+      return true;
+    }
+
+    // Get neighbors sorted by Warnsdorff's rule (fewest options first)
+    const neighbors = this.getWarnsdorffSortedNeighbors(start);
+
+    // Try each neighbor in order of constraint
+    for (const neighbor of neighbors) {
+      if (this.generateOptimizedHamiltonianPath(neighbor)) {
+        return true;
+      }
+    }
+
+    // Backtrack
+    this.visited.delete(key);
+    this.path.pop();
+    this.grid[start.y][start.x] = false;
+
+    return false;
+  }
+
+  /**
+   * Legacy Hamiltonian path generation (original algorithm)
+   */
+  private generateLegacyHamiltonianPath(start: Position): boolean {
     if (this.isTimedOut()) return false;
 
     const key = this.positionToKey(start);
@@ -153,7 +286,7 @@ export class PuzzleGenerator {
 
     // Try each neighbor
     for (const neighbor of neighbors) {
-      if (this.generateHamiltonianPath(neighbor)) {
+      if (this.generateLegacyHamiltonianPath(neighbor)) {
         return true;
       }
     }
@@ -167,19 +300,77 @@ export class PuzzleGenerator {
   }
 
   /**
+   * Get neighbors sorted by Warnsdorff's rule (most constrained first)
+   */
+  private getWarnsdorffSortedNeighbors(pos: Position): Position[] {
+    const directions = [
+      { x: 0, y: -1 }, // Up
+      { x: 1, y: 0 }, // Right
+      { x: 0, y: 1 }, // Down
+      { x: -1, y: 0 }, // Left
+    ];
+
+    // Get all valid unvisited neighbors
+    const candidates = directions
+      .map(dir => ({ x: pos.x + dir.x, y: pos.y + dir.y }))
+      .filter(
+        p => this.isValidPosition(p) && !this.visited.has(this.positionToKey(p))
+      );
+
+    if (candidates.length === 0) return [];
+
+    // Calculate accessibility (number of unvisited neighbors) for each candidate
+    const scored = candidates.map(candidate => ({
+      position: candidate,
+      accessibility: this.countUnvisitedNeighbors(candidate),
+      tiebreaker: Math.random(), // Small random factor for variety
+    }));
+
+    // Sort by accessibility (lowest first), then by tiebreaker
+    scored.sort((a, b) => {
+      if (a.accessibility !== b.accessibility) {
+        return a.accessibility - b.accessibility; // Warnsdorff's rule
+      }
+      return a.tiebreaker - b.tiebreaker; // Random tiebreaker
+    });
+
+    return scored.map(item => item.position);
+  }
+
+  /**
+   * Count unvisited neighbors for Warnsdorff's rule
+   */
+  private countUnvisitedNeighbors(pos: Position): number {
+    const directions = [
+      { x: 0, y: -1 },
+      { x: 1, y: 0 },
+      { x: 0, y: 1 },
+      { x: -1, y: 0 },
+    ];
+
+    return directions
+      .map(dir => ({ x: pos.x + dir.x, y: pos.y + dir.y }))
+      .filter(
+        p => this.isValidPosition(p) && !this.visited.has(this.positionToKey(p))
+      ).length;
+  }
+
+  /**
    * Get valid neighboring positions (orthogonal only, within bounds, unvisited)
    */
   private getValidNeighbors(pos: Position): Position[] {
     const directions = [
       { x: 0, y: -1 }, // Up
-      { x: 1, y: 0 },  // Right
-      { x: 0, y: 1 },  // Down
+      { x: 1, y: 0 }, // Right
+      { x: 0, y: 1 }, // Down
       { x: -1, y: 0 }, // Left
     ];
 
     return directions
       .map(dir => ({ x: pos.x + dir.x, y: pos.y + dir.y }))
-      .filter(p => this.isValidPosition(p) && !this.visited.has(this.positionToKey(p)))
+      .filter(
+        p => this.isValidPosition(p) && !this.visited.has(this.positionToKey(p))
+      )
       .sort(() => {
         // Add some heuristics to prefer positions that don't create dead ends
         // This improves generation success rate
@@ -191,7 +382,9 @@ export class PuzzleGenerator {
    * Check if position is within grid bounds
    */
   private isValidPosition(pos: Position): boolean {
-    return pos.x >= 0 && pos.x < this.gridSize && pos.y >= 0 && pos.y < this.gridSize;
+    return (
+      pos.x >= 0 && pos.x < this.gridSize && pos.y >= 0 && pos.y < this.gridSize
+    );
   }
 
   /**
@@ -224,7 +417,9 @@ export class PuzzleGenerator {
    */
   private selectDotPositions(dotCount: number): Dot[] {
     if (dotCount < 2 || dotCount > this.path.length) {
-      throw new Error(`Invalid dot count: ${dotCount}. Must be between 2 and ${this.path.length}`);
+      throw new Error(
+        `Invalid dot count: ${dotCount}. Must be between 2 and ${this.path.length}`
+      );
     }
 
     const dots: Dot[] = [];
@@ -275,16 +470,26 @@ export class PuzzleGenerator {
       );
 
       // Allow small random adjustments within bounds
-      const minIndex = i === 1 ? 1 : this.path.findIndex(
-        p => p.x === dots[i - 1].position.x && p.y === dots[i - 1].position.y
-      ) + 1;
+      const minIndex =
+        i === 1
+          ? 1
+          : this.path.findIndex(
+              p =>
+                p.x === dots[i - 1].position.x && p.y === dots[i - 1].position.y
+            ) + 1;
 
-      const maxIndex = i === dots.length - 2 ? this.path.length - 2 : this.path.findIndex(
-        p => p.x === dots[i + 1].position.x && p.y === dots[i + 1].position.y
-      ) - 1;
+      const maxIndex =
+        i === dots.length - 2
+          ? this.path.length - 2
+          : this.path.findIndex(
+              p =>
+                p.x === dots[i + 1].position.x && p.y === dots[i + 1].position.y
+            ) - 1;
 
       if (maxIndex > minIndex) {
-        const randomOffset = Math.floor(Math.random() * Math.min(3, maxIndex - minIndex));
+        const randomOffset = Math.floor(
+          Math.random() * Math.min(3, maxIndex - minIndex)
+        );
         const newIndex = Math.min(currentPathIndex + randomOffset, maxIndex);
         dots[i].position = this.path[newIndex];
       }
@@ -310,7 +515,9 @@ export class PuzzleGenerator {
     }
 
     // Check that no two dots share the same position
-    const positions = new Set(dots.map(dot => this.positionToKey(dot.position)));
+    const positions = new Set(
+      dots.map(dot => this.positionToKey(dot.position))
+    );
     if (positions.size !== dots.length) {
       return false;
     }
@@ -340,14 +547,53 @@ export class PuzzleGenerator {
 
 /**
  * Convenience function to generate a puzzle with default options
+ * Uses the optimized algorithm by default for best performance
  */
-export async function generateZipPuzzle(gridSize: number): Promise<PuzzleGenerationResult> {
+export async function generateZipPuzzle(
+  gridSize: number
+): Promise<PuzzleGenerationResult> {
   const generator = new PuzzleGenerator({ gridSize });
   return generator.generatePuzzle({
     gridSize,
-    dotCount: DEFAULT_DOTS_PER_GRID_SIZE[gridSize] || Math.floor(gridSize * 1.5),
+    dotCount:
+      DEFAULT_DOTS_PER_GRID_SIZE[gridSize] || Math.floor(gridSize * 1.5),
+    maxAttempts: 5, // Fewer attempts needed with optimization
+    timeout: TIMING_CONFIG.generationTimeout,
+    useOptimized: true,
+  });
+}
+
+/**
+ * Fast puzzle generation with reduced timeout for better UI responsiveness
+ */
+export async function generateFastZipPuzzle(
+  gridSize: number
+): Promise<PuzzleGenerationResult> {
+  const generator = new PuzzleGenerator({ gridSize });
+  return generator.generatePuzzle({
+    gridSize,
+    dotCount:
+      DEFAULT_DOTS_PER_GRID_SIZE[gridSize] || Math.floor(gridSize * 1.5),
+    maxAttempts: 3,
+    timeout: Math.min(TIMING_CONFIG.generationTimeout, 3000), // Max 3 seconds
+    useOptimized: true,
+  });
+}
+
+/**
+ * Legacy puzzle generation for fallback/testing purposes
+ */
+export async function generateLegacyZipPuzzle(
+  gridSize: number
+): Promise<PuzzleGenerationResult> {
+  const generator = new PuzzleGenerator({ gridSize });
+  return generator.generatePuzzle({
+    gridSize,
+    dotCount:
+      DEFAULT_DOTS_PER_GRID_SIZE[gridSize] || Math.floor(gridSize * 1.5),
     maxAttempts: 10,
     timeout: TIMING_CONFIG.generationTimeout,
+    useOptimized: false, // Force legacy algorithm
   });
 }
 
@@ -378,7 +624,13 @@ export function generateSimplePuzzle(gridSize: number): Puzzle {
     const nextKey = `${nextX},${nextY}`;
 
     // Change direction if we hit boundary or visited cell
-    if (nextX < 0 || nextX >= gridSize || nextY < 0 || nextY >= gridSize || visited.has(nextKey)) {
+    if (
+      nextX < 0 ||
+      nextX >= gridSize ||
+      nextY < 0 ||
+      nextY >= gridSize ||
+      visited.has(nextKey)
+    ) {
       // Rotate 90 degrees clockwise
       const newDx = -dy;
       const newDy = dx;
@@ -395,7 +647,9 @@ export function generateSimplePuzzle(gridSize: number): Puzzle {
 
   // Evenly distribute dots
   for (let i = 0; i < dotCount; i++) {
-    const pathIndex = Math.floor((i * (solutionPath.length - 1)) / (dotCount - 1));
+    const pathIndex = Math.floor(
+      (i * (solutionPath.length - 1)) / (dotCount - 1)
+    );
     dots.push({
       position: solutionPath[pathIndex],
       number: i + 1,

@@ -3,6 +3,7 @@ import type { GameState, GameMode, Puzzle, Position } from '../../types/game';
 import { GAME_CONFIG } from '../../constants/config';
 import {
   generateZipPuzzle,
+  generateFastZipPuzzle,
   generateSimplePuzzle,
 } from '../../utils/puzzleGenerator';
 import Grid from '../Grid/Grid';
@@ -24,6 +25,8 @@ const Game: React.FC = () => {
   const [gameMode, setGameMode] = useState<GameMode>('idle');
 
   const handleNewPuzzle = useCallback(async () => {
+    const startGenerationTime = performance.now();
+
     setGameMode('generating');
     setGameState(prevState => ({
       ...prevState,
@@ -36,8 +39,15 @@ const Game: React.FC = () => {
     }));
 
     try {
-      // Try advanced generation first
-      const result = await generateZipPuzzle(gameState.gridSize);
+      // Use fast optimized generation for better UX
+      const result = await generateFastZipPuzzle(gameState.gridSize);
+
+      const endGenerationTime = performance.now();
+      const generationTime = endGenerationTime - startGenerationTime;
+
+      console.log(
+        `Puzzle generation completed in ${generationTime.toFixed(2)}ms for ${gameState.gridSize}×${gameState.gridSize} grid`
+      );
 
       if (result.success && result.puzzle) {
         setGameState(prevState => ({
@@ -47,24 +57,41 @@ const Game: React.FC = () => {
         }));
         setGameMode('playing');
       } else {
-        // Fallback to simple generation
+        // Try standard optimized generation if fast fails
         console.warn(
-          'Advanced generation failed, using simple fallback:',
+          'Fast generation failed, trying standard optimized generation:',
           result.error
         );
-        const simplePuzzle = generateSimplePuzzle(gameState.gridSize);
 
-        setGameState(prevState => ({
-          ...prevState,
-          puzzle: simplePuzzle,
-          isGenerating: false,
-        }));
-        setGameMode('playing');
+        const fallbackResult = await generateZipPuzzle(gameState.gridSize);
+
+        if (fallbackResult.success && fallbackResult.puzzle) {
+          setGameState(prevState => ({
+            ...prevState,
+            puzzle: fallbackResult.puzzle,
+            isGenerating: false,
+          }));
+          setGameMode('playing');
+        } else {
+          // Final fallback to simple generation
+          console.warn(
+            'Optimized generation failed, using simple fallback:',
+            fallbackResult.error
+          );
+          const simplePuzzle = generateSimplePuzzle(gameState.gridSize);
+
+          setGameState(prevState => ({
+            ...prevState,
+            puzzle: simplePuzzle,
+            isGenerating: false,
+          }));
+          setGameMode('playing');
+        }
       }
     } catch (error) {
-      console.error('Puzzle generation failed:', error);
+      console.error('All puzzle generation methods failed:', error);
 
-      // Final fallback with minimal puzzle
+      // Emergency fallback with minimal puzzle
       const fallbackPuzzle: Puzzle = {
         id: `fallback-${Date.now()}`,
         gridSize: gameState.gridSize,
@@ -237,7 +264,15 @@ const Game: React.FC = () => {
           {gameMode === 'generating' && (
             <div className="loading-overlay">
               <div className="loading-spinner" />
-              <p>Generating puzzle...</p>
+              <p>
+                Generating {gameState.gridSize}×{gameState.gridSize} puzzle...
+                {gameState.gridSize >= 6 && (
+                  <>
+                    <br />
+                    <small>Using optimized algorithm for fast generation</small>
+                  </>
+                )}
+              </p>
             </div>
           )}
 

@@ -36,7 +36,9 @@
     "test:headed": "playwright test --headed",
     "test:ui": "playwright test --ui",
     "test:debug": "playwright test --debug",
-    "test:report": "playwright show-report"
+    "test:report": "playwright show-report",
+    "benchmark": "vitest bench src/benchmarks",
+    "benchmark:watch": "vitest bench src/benchmarks --watch"
   },
   "dependencies": {
     "react": "^19.1.0",
@@ -59,6 +61,7 @@
     "prettier": "^3.6.2",
     "typescript": "~5.8.3",
     "typescript-eslint": "^8.35.1",
-    "vite": "^7.0.4"
+    "vite": "^7.0.4",
+    "vitest": "^3.2.4"
   }
 }
