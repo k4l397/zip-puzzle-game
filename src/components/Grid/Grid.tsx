@@ -185,19 +185,11 @@ const Grid: React.FC<GridProps> = ({
       if (path.length > 1) {
         const currentPos = path[path.length - 1];
 
+        ctx.strokeStyle = GAME_CONFIG.colors.pipe;
+
         for (let i = 1; i < path.length; i++) {
           const fromPos = getCanvasPosition(path[i - 1]);
           const toPos = getCanvasPosition(path[i]);
-
-          // Determine if this segment can be backtracked to using current position context
-          const canBacktrack = validator.canBacktrackToPosition(
-            path,
-            path[i],
-            currentPos
-          );
-          ctx.strokeStyle = canBacktrack
-            ? GAME_CONFIG.colors.pipe
-            : 'rgba(100, 100, 100, 0.6)'; // Dimmed color for non-backtrackable
 
           ctx.beginPath();
           ctx.moveTo(fromPos.x, fromPos.y);
@@ -211,7 +203,13 @@ const Grid: React.FC<GridProps> = ({
         const position = path[i];
         const pos = getCanvasPosition(position);
 
-        // Determine if this position can be backtracked to
+        // Regular path circle
+        ctx.fillStyle = GAME_CONFIG.colors.pipe;
+        ctx.beginPath();
+        ctx.arc(pos.x, pos.y, scaledPipeWidth / 6, 0, 2 * Math.PI);
+        ctx.fill();
+
+        // Add hover highlight for backtrackable positions
         const currentPos = path[path.length - 1];
         const canBacktrack = validator.canBacktrackToPosition(
           path,
@@ -219,15 +217,6 @@ const Grid: React.FC<GridProps> = ({
           currentPos
         );
 
-        // Regular path circle with appropriate color
-        ctx.fillStyle = canBacktrack
-          ? GAME_CONFIG.colors.pipe
-          : 'rgba(100, 100, 100, 0.6)';
-        ctx.beginPath();
-        ctx.arc(pos.x, pos.y, scaledPipeWidth / 6, 0, 2 * Math.PI);
-        ctx.fill();
-
-        // Add hover highlight only for backtrackable positions
         if (
           hoveredPosition &&
           hoveredPosition.x === position.x &&
