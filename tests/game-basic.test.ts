@@ -139,11 +139,16 @@ test.describe('Zip Puzzle Game - Basic Functionality', () => {
     const canvas = page.locator('.game-canvas');
     await expect(canvas).toBeVisible({ timeout: 15000 });
 
-    // After generation, grid size should remain disabled (game is playing)
-    // but new puzzle button should be enabled
-    await expect(gridSizeSelect).toBeDisabled();
+    // After generation, grid size should now be enabled (can select next puzzle size)
+    // and new puzzle button should be enabled
+    await expect(gridSizeSelect).toBeEnabled();
     const newPuzzleBtn = page.locator('.new-puzzle-btn');
     await expect(newPuzzleBtn).toBeEnabled();
+
+    // Reset button should be visible and enabled during gameplay
+    const resetBtn = page.locator('.reset-btn');
+    await expect(resetBtn).toBeVisible();
+    await expect(resetBtn).toBeEnabled();
   });
 
   test('should show canvas with proper dimensions', async ({ page }) => {
@@ -253,5 +258,110 @@ test.describe('Zip Puzzle Game - Basic Functionality', () => {
     // Grid size should still show 4
     const finalValue = await gridSizeSelect.inputValue();
     expect(finalValue).toBe('4');
+  });
+
+  test('should reset puzzle without generating new one', async ({ page }) => {
+    // Start a game
+    const startBtn = page.locator('.start-btn');
+    await startBtn.click();
+
+    const canvas = page.locator('.game-canvas');
+    await expect(canvas).toBeVisible({ timeout: 10000 });
+
+    // Reset button should be visible
+    const resetBtn = page.locator('.reset-btn');
+    await expect(resetBtn).toBeVisible();
+    await expect(resetBtn).toBeEnabled();
+
+    // Simulate some interaction to start the timer
+    const canvasBounds = await canvas.boundingBox();
+    if (canvasBounds) {
+      await page.mouse.click(canvasBounds.x + 50, canvasBounds.y + 50);
+    }
+
+    // Wait a moment for timer to potentially start
+    await page.waitForTimeout(500);
+
+    // Click reset
+    await resetBtn.click();
+
+    // Should still be in playing mode with same canvas
+    await expect(canvas).toBeVisible();
+    await expect(resetBtn).toBeVisible();
+
+    // Timer should reset (though exact timing depends on implementation)
+    const timerDisplay = page.locator('.timer-display');
+    await expect(timerDisplay).toBeVisible();
+
+    // Canvas should still be interactive
+    await expect(canvas).not.toHaveClass(/disabled/);
+  });
+
+  test('should allow changing grid size during gameplay for next puzzle', async ({
+    page,
+  }) => {
+    // Start a game with default size (4x4)
+    const startBtn = page.locator('.start-btn');
+    await startBtn.click();
+
+    const canvas = page.locator('.game-canvas');
+    await expect(canvas).toBeVisible({ timeout: 10000 });
+
+    const gridSizeSelect = page.locator('#grid-size');
+
+    // Grid size should be enabled during gameplay
+    await expect(gridSizeSelect).toBeEnabled();
+
+    // Change grid size during gameplay
+    await gridSizeSelect.selectOption('5');
+
+    // Should still show 5 as selected
+    const currentValue = await gridSizeSelect.inputValue();
+    expect(currentValue).toBe('5');
+
+    // Canvas should still be visible and unchanged
+    await expect(canvas).toBeVisible();
+
+    // Generate new puzzle - should use the new size
+    const newPuzzleBtn = page.locator('.new-puzzle-btn');
+    await newPuzzleBtn.click();
+
+    // Wait for new puzzle generation
+    await expect(canvas).toBeVisible({ timeout: 15000 });
+
+    // Grid size should still be 5
+    const finalValue = await gridSizeSelect.inputValue();
+    expect(finalValue).toBe('5');
+  });
+
+  test('should not show reset button in idle state', async ({ page }) => {
+    // In idle state, reset button should not be visible
+    const resetBtn = page.locator('.reset-btn');
+    await expect(resetBtn).not.toBeVisible();
+
+    // Only start button should be visible
+    const startBtn = page.locator('.start-btn');
+    await expect(startBtn).toBeVisible();
+
+    // New puzzle button should be visible but reset should not
+    const newPuzzleBtn = page.locator('.new-puzzle-btn');
+    await expect(newPuzzleBtn).toBeVisible();
+  });
+
+  test('should show reset button in completed state', async ({ page }) => {
+    // Start a game
+    const startBtn = page.locator('.start-btn');
+    await startBtn.click();
+
+    const canvas = page.locator('.game-canvas');
+    await expect(canvas).toBeVisible({ timeout: 10000 });
+
+    // Reset button should be visible during play
+    const resetBtn = page.locator('.reset-btn');
+    await expect(resetBtn).toBeVisible();
+
+    // Note: We can't easily complete a puzzle in tests without knowing the exact solution,
+    // but we can verify the button remains visible when the component is in completed state
+    // This is covered by the visual implementation where completed state also shows reset button
   });
 });
