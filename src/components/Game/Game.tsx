@@ -25,8 +25,6 @@ const Game: React.FC = () => {
   const [gameMode, setGameMode] = useState<GameMode>('idle');
 
   const handleNewPuzzle = useCallback(async () => {
-    const startGenerationTime = performance.now();
-
     setGameMode('generating');
     setGameState(prevState => ({
       ...prevState,
@@ -39,15 +37,8 @@ const Game: React.FC = () => {
     }));
 
     try {
-      // Use fast optimized generation for better UX
+      // Try fast generation first for better UX
       const result = await generateFastZipPuzzle(gameState.gridSize);
-
-      const endGenerationTime = performance.now();
-      const generationTime = endGenerationTime - startGenerationTime;
-
-      console.log(
-        `Puzzle generation completed in ${generationTime.toFixed(2)}ms for ${gameState.gridSize}×${gameState.gridSize} grid`
-      );
 
       if (result.success && result.puzzle) {
         setGameState(prevState => ({
@@ -57,9 +48,9 @@ const Game: React.FC = () => {
         }));
         setGameMode('playing');
       } else {
-        // Try standard optimized generation if fast fails
+        // Try standard generation if fast fails
         console.warn(
-          'Fast generation failed, trying standard optimized generation:',
+          'Fast generation failed, trying standard generation:',
           result.error
         );
 
@@ -75,7 +66,7 @@ const Game: React.FC = () => {
         } else {
           // Final fallback to simple generation
           console.warn(
-            'Optimized generation failed, using simple fallback:',
+            'Standard generation failed, using simple fallback:',
             fallbackResult.error
           );
           const simplePuzzle = generateSimplePuzzle(gameState.gridSize);
@@ -266,12 +257,6 @@ const Game: React.FC = () => {
               <div className="loading-spinner" />
               <p>
                 Generating {gameState.gridSize}×{gameState.gridSize} puzzle...
-                {gameState.gridSize >= 6 && (
-                  <>
-                    <br />
-                    <small>Using optimized algorithm for fast generation</small>
-                  </>
-                )}
               </p>
             </div>
           )}
